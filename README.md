@@ -1,57 +1,44 @@
 # Kampüs Kayıp-Eşya
 
-Kampüs kayıp/bulunan eşya ilan uygulaması. Küçük, bitirilebilir, tarayıcıda demo edilebilir.
+Aksaray Üniversitesi kampüs kayıp/bulunan eşya panosu. Angular + .NET + PostgreSQL.
+GitHub tek kaynak: https://github.com/safacenkci/kampus-kayip-esya
 
-## Stack
+## Kalite barı (bugün kapanış, hepsi şart)
 
-- Frontend: Angular (`frontend/`)
-- Backend: ASP.NET Core Web API (`backend/`)
-- Veritabanı: PostgreSQL (`docker-compose.yml`)
+Generic CRUD yetmez. Bitti = tarayıcıda bu 9 madde kanıtlanmış:
 
-## MVP
+1. İki ayrı akış: **Kaybettim** / **Buldum** (tek generic form değil).
+2. Konum seçmeli: `merkez`, `kütüphane`, `yemekhane`, `mühendislik`, `yurt`, `spor salonu`.
+3. Kategori: `öğrenci kartı`, `anahtar`, `telefon`, `çanta`, `kıyafet`, `kulaklık`, `diğer`.
+4. Durum: `open` → `claimed` → `closed` (açık / sahiplenildi / kapandı). Detayda kısa durum geçmişi.
+5. Liste: arama + tip/kategori/konum/durum filtre; kart UI; boş state.
+6. Eşleşme: detayda aynı kategori+konumda açık karşıt ilan önerisi (`lost`↔`found`).
+7. İletişim, durum `claimed` olana kadar gizli (API de `open` iken `contact` dönmez).
+8. Türkçe UI. 6–8 gerçekçi seed ilan.
+9. PostgreSQL: refresh sonrası veri durur.
 
-Kayıp ve bulunan ilan CRUD:
-- Alanlar: `title`, `description`, `location`, `category`, `contact`, `photoUrl` (string URL, dosya yükleme yok)
-- `kind`: `lost` | `found`
-- `status`: `open` | `claimed` | `closed`  (açık / sahiplenildi / kapandı)
+Kapsam dışı: gerçek auth, dosya yükleme, harita SDK, chat. `photoUrl` string yeter.
 
-Ekranlar: liste + arama/filtre, detay, durum değiştir, oluştur/düzenle/sil.
-
-Kapsam dışı: gerçek auth, dosya yükleme, sohbet.
-
-## API sözleşmesi (`/api`)
+## API (`/api`)
 
 ```
-GET    /api/items?q=&category=&status=&kind=
+GET    /api/items?q=&kind=&category=&location=&status=
 POST   /api/items
 GET    /api/items/{id}
 PUT    /api/items/{id}
 PATCH  /api/items/{id}/status   body: { "status": "claimed" }
 DELETE /api/items/{id}
+GET    /api/items/{id}/matches
 GET    /api/categories
+GET    /api/locations
 ```
 
-Örnek gövde:
+`kind`: `lost` | `found`. JSON camelCase. CORS: `http://localhost:4200` → `http://localhost:5080`.
 
-```json
-{
-  "id": 1,
-  "title": "Siyah mont",
-  "description": "Kütüphane 2. kat",
-  "location": "Merkez Kütüphane",
-  "category": "giyim",
-  "contact": "safa@example.com",
-  "photoUrl": "https://picsum.photos/seed/mont/400/300",
-  "kind": "lost",
-  "status": "open",
-  "createdAt": "2026-08-27T08:00:00Z"
-}
+## Çalıştırma
+
+```bash
+docker compose up -d postgres
+cd backend && dotnet run          # :5080
+cd frontend && npm i && npx ng serve --port 4200
 ```
-
-CORS: `http://localhost:4200` → API `http://localhost:5080`.
-
-Seed: en az 5 örnek ilan.
-
-## Bitti kriteri
-
-Sayfa yenilenince veri duruyor. Tarayıcıda uçtan uca demo edilebiliyor.
