@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<StatusHistory> StatusHistories => Set<StatusHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,9 +28,26 @@ public class AppDbContext : DbContext
         item.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
         item.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
 
+        item.HasMany(e => e.StatusHistory)
+            .WithOne(e => e.Item)
+            .HasForeignKey(e => e.ItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         item.HasIndex(e => e.Category);
+        item.HasIndex(e => e.Location);
         item.HasIndex(e => e.Kind);
         item.HasIndex(e => e.Status);
         item.HasIndex(e => e.CreatedAt);
+
+        var history = modelBuilder.Entity<StatusHistory>();
+        history.ToTable("status_history");
+        history.HasKey(e => e.Id);
+        history.Property(e => e.Id).HasColumnName("id");
+        history.Property(e => e.ItemId).HasColumnName("item_id");
+        history.Property(e => e.FromStatus).HasColumnName("from_status").HasMaxLength(20);
+        history.Property(e => e.ToStatus).HasColumnName("to_status").HasMaxLength(20).IsRequired();
+        history.Property(e => e.ChangedAt).HasColumnName("changed_at").HasColumnType("timestamp with time zone");
+        history.HasIndex(e => e.ItemId);
+        history.HasIndex(e => e.ChangedAt);
     }
 }

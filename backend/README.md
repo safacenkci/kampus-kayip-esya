@@ -1,6 +1,14 @@
 # Kampüs Kayıp-Eşya API
 
-ASP.NET Core 8 Web API. Listens on `http://localhost:5080`. CORS allows `http://localhost:4200`.
+ASP.NET Core 8 Web API for the Aksaray University campus lost-and-found board.
+Listens on `http://localhost:5080`. CORS allows `http://localhost:4200`.
+
+Fixed catalogs:
+
+- Locations: `merkez`, `kütüphane`, `yemekhane`, `mühendislik`, `yurt`, `spor salonu`
+- Categories: `öğrenci kartı`, `anahtar`, `telefon`, `çanta`, `kıyafet`, `kulaklık`, `diğer`
+
+`contact` is omitted while `status` is `open`. `GET /api/items/{id}` includes `statusHistory`.
 
 ## Run locally
 
