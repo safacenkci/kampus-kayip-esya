@@ -19,6 +19,19 @@ Generic CRUD yetmez. Bitti = tarayıcıda bu 9 madde kanıtlanmış:
 
 Kapsam dışı: gerçek auth, dosya yükleme, harita SDK, chat. `photoUrl` string yeter.
 
+## Yol haritası
+
+MVP'den kusursuz ürüne giden plan `docs/` altında:
+
+| Doküman | İçerik |
+|---|---|
+| [`docs/YOL-HARITASI.md`](docs/YOL-HARITASI.md) | 9 faz, 70 görev kartı (~305 adam-saat), mimari, veri modeli, riskler |
+| [`docs/AJAN-PROTOKOLU.md`](docs/AJAN-PROTOKOLU.md) | Paralel çalışan ajanlar için kurallar: dal/commit/PR, dosya sahipliği, migration kilidi |
+| [`docs/gorevler.json`](docs/gorevler.json) | Makine okunur görev listesi (bağımlılık grafiği ile) — görev dağıtımı için |
+
+Sıradaki iş **F0 — Sağlamlaştırma**: CI kurulumu, hata sözleşmesi, sır yönetimi ve
+`F0-SEC-01` (yetkisiz durum değişikliği + iletişim sızıntısı) kapatılması.
+
 ## API (`/api`)
 
 ```
