@@ -1,0 +1,95 @@
+@if (loading()) {
+  <div class="panel skeleton-detail"></div>
+} @else if (error()) {
+  <div class="banner banner-error" role="alert">
+    <p>{{ error() }}</p>
+    <div class="row-actions">
+      <button type="button" class="btn btn-ghost" (click)="load()">Yeniden dene</button>
+      <a routerLink="/" class="btn btn-ghost">İlanlara dön</a>
+    </div>
+  </div>
+} @else if (item(); as item) {
+  <article class="detail">
+    <a routerLink="/" class="back">← İlanlara dön</a>
+
+    <div class="detail-grid">
+      <div class="media">
+        @if (item.photoUrl && !photoBroken()) {
+          <img [src]="item.photoUrl" [alt]="item.title" (error)="onPhotoError()" />
+        } @else {
+          <div class="media-empty">Görsel yok</div>
+        }
+      </div>
+
+      <div class="panel">
+        <div class="flags">
+          <app-kind-badge [kind]="item.kind" />
+          <app-status-badge [status]="item.status" />
+        </div>
+        <h1>{{ item.title }}</h1>
+        <p class="when">{{ formatDate(item.createdAt) }}</p>
+
+        <dl class="facts">
+          <div>
+            <dt>Konum</dt>
+            <dd>{{ item.location }}</dd>
+          </div>
+          <div>
+            <dt>Kategori</dt>
+            <dd>{{ item.category }}</dd>
+          </div>
+          <div>
+            <dt>İletişim</dt>
+            <dd>
+              @if (contactHref(item.contact); as href) {
+                <a [href]="href">{{ item.contact }}</a>
+              } @else {
+                {{ item.contact }}
+              }
+            </dd>
+          </div>
+        </dl>
+
+        <h2>Açıklama</h2>
+        <p class="description">{{ item.description }}</p>
+
+        <section class="status-box">
+          <h2>Durumu değiştir</h2>
+          <div class="status-actions">
+            @for (status of statusOptions; track status) {
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="item.status === status"
+                [class.btn-ghost]="item.status !== status"
+                [disabled]="actionBusy() || item.status === status"
+                (click)="changeStatus(status)"
+              >
+                {{ statusLabels[status] }}
+              </button>
+            }
+          </div>
+        </section>
+
+        @if (actionError()) {
+          <div class="banner banner-error" role="alert">{{ actionError() }}</div>
+        }
+
+        <div class="row-actions">
+          <a [routerLink]="['/', item.id, 'duzenle']" class="btn btn-ghost">Düzenle</a>
+          @if (!confirmDelete()) {
+            <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="confirmDelete.set(true)">
+              Sil
+            </button>
+          } @else {
+            <span class="confirm">
+              Silmek istediğinize emin misiniz?
+              <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="deleteItem()">Evet, sil</button>
+              <button type="button" class="btn btn-ghost" (click)="confirmDelete.set(false)">Vazgeç</button>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </article>
+}

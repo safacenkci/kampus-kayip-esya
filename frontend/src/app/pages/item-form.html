@@ -1,0 +1,99 @@
+<section class="form-page">
+  <a routerLink="/" class="back">← İlanlara dön</a>
+  <h1>{{ isEdit() ? 'İlanı düzenle' : 'Yeni ilan' }}</h1>
+  <p class="lede">
+    Fotoğraf için dosya yüklemeyin; varsa görsel adresini (URL) yapıştırın.
+  </p>
+
+  @if (loading()) {
+    <div class="panel skeleton"></div>
+  } @else {
+    <form class="panel" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (error()) {
+        <div class="banner banner-error" role="alert">{{ error() }}</div>
+      }
+
+      <label>
+        Başlık
+        <input type="text" formControlName="title" placeholder="Örn. Siyah mont" />
+        @if (invalid('title')) {
+          <span class="hint-error">Başlık en az 2 karakter olmalı.</span>
+        }
+      </label>
+
+      <label>
+        Açıklama
+        <textarea rows="4" formControlName="description" placeholder="Nerede görüldü veya bırakıldı?"></textarea>
+        @if (invalid('description')) {
+          <span class="hint-error">Açıklama gerekli.</span>
+        }
+      </label>
+
+      <div class="two-col">
+        <label>
+          Konum
+          <input type="text" formControlName="location" placeholder="Örn. Merkez Kütüphane" />
+          @if (invalid('location')) {
+            <span class="hint-error">Konum gerekli.</span>
+          }
+        </label>
+
+        <label>
+          İletişim
+          <input type="text" formControlName="contact" placeholder="e-posta veya telefon" />
+          @if (invalid('contact')) {
+            <span class="hint-error">İletişim bilgisi gerekli.</span>
+          }
+        </label>
+      </div>
+
+      <div class="two-col">
+        <div class="category-field">
+          <span class="field-label">Kategori</span>
+          @if (categories().length && !useCustomCategory()) {
+            <select
+              [value]="form.controls.category.value"
+              (change)="onCategorySelect($event)"
+            >
+              <option value="" disabled>Seçin</option>
+              @for (name of categories(); track name) {
+                <option [value]="name">{{ name }}</option>
+              }
+              <option value="__custom__">Diğer (yazın)</option>
+            </select>
+          } @else {
+            <input type="text" formControlName="category" placeholder="Örn. giyim, elektronik" />
+            @if (categories().length) {
+              <button type="button" class="linkish" (click)="useCustomCategory.set(false)">Listeden seç</button>
+            }
+          }
+          @if (invalid('category')) {
+            <span class="hint-error">Kategori gerekli.</span>
+          }
+        </div>
+
+        <label>
+          Tür
+          <select formControlName="kind">
+            @for (option of kindOptions; track option) {
+              <option [value]="option">{{ kindLabels[option] }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Fotoğraf URL
+        <input type="text" formControlName="photoUrl" placeholder="https://..." />
+        <span class="hint">İsteğe bağlı. Dosya seçici yoktur; yalnızca bağlantı.</span>
+      </label>
+
+      <div class="row-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? 'Kaydediliyor…' : isEdit() ? 'Değişiklikleri kaydet' : 'İlanı yayınla' }}
+        </button>
+        <a routerLink="/" class="btn btn-ghost">Vazgeç</a>
+      </div>
+    </form>
+  }
+</section>

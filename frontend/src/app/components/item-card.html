@@ -1,0 +1,22 @@
+<a class="card" [routerLink]="['/', item().id]">
+  <div class="card-media" [class.no-photo]="!item().photoUrl">
+    @if (item().photoUrl) {
+      <img [src]="item().photoUrl" [alt]="item().title" loading="lazy" />
+    } @else {
+      <div class="card-placeholder">{{ placeholder(item().kind) }}</div>
+    }
+    <div class="card-flags">
+      <app-kind-badge [kind]="item().kind" />
+      <app-status-badge [status]="item().status" />
+    </div>
+  </div>
+  <div class="card-body">
+    <h2>{{ item().title }}</h2>
+    <p class="meta">
+      <span>{{ item().location }}</span>
+      <span aria-hidden="true">·</span>
+      <span>{{ item().category }}</span>
+    </p>
+    <p class="date">{{ formatDate(item().createdAt) }}</p>
+  </div>
+</a>
