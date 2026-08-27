@@ -1,0 +1,9 @@
+<section class="story story-found">
+  <a routerLink="/" class="back">← İlanlara dön</a>
+  <div class="story-hero">
+    <p class="eyebrow">Aksaray Üniversitesi · Buldum</p>
+    <h1>{{ editId() ? copy.editTitle : copy.title }}</h1>
+    <p class="lede">{{ editId() ? copy.editLede : copy.lede }}</p>
+  </div>
+  <app-notice-wizard kind="found" [editId]="editId()" />
+</section>

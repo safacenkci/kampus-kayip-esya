@@ -1,11 +1,24 @@
 <section class="hero">
   <div>
-    <p class="eyebrow">Kampüs panosu</p>
-    <h1>Kayıp mı, bulundu mu?</h1>
+    <p class="eyebrow">Aksaray Üniversitesi kampüs panosu</p>
+    <h1>Kaybettim veya buldum</h1>
     <p class="lede">
-      Kampüsteki kayıp ve bulunan eşyaları arayın, filtreleyin veya yeni bir ilan ekleyin.
+      Kayıp ve bulunan eşyaları arayın, filtreleyin. Kaybettim ve Buldum ayrı akışlardır; iletişim yalnızca sahiplenilince görünür.
     </p>
   </div>
+</section>
+
+<section class="launch" aria-label="İlan aç">
+  <a routerLink="/kaybettim" class="launch-card launch-lost">
+    <span class="eyebrow">Kaybettim</span>
+    <strong>Eşyamı kaybettim</strong>
+    <span>Kampüste kaybettiğiniz eşyayı bildirin. İletişim, sahiplenilene kadar gizli kalır.</span>
+  </a>
+  <a routerLink="/buldum" class="launch-card launch-found">
+    <span class="eyebrow">Buldum</span>
+    <strong>Eşya buldum</strong>
+    <span>Bulduğunuz eşyayı kaydedin. Aynı konum ve kategorideki kayıp ilanlar önerilir.</span>
+  </a>
 </section>
 
 <section class="filters" aria-label="Arama ve filtreler">
@@ -26,6 +39,26 @@
     </label>
 
     <label>
+      Kategori
+      <select [value]="category()" (change)="setCategory($event)">
+        <option value="">Tümü</option>
+        @for (name of categories(); track name) {
+          <option [value]="name">{{ name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Konum
+      <select [value]="location()" (change)="setLocation($event)">
+        <option value="">Tümü</option>
+        @for (name of locations(); track name) {
+          <option [value]="name">{{ name }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
       Durum
       <select [value]="status()" (change)="setStatus($event)">
         <option value="">Tümü</option>
@@ -33,20 +66,6 @@
           <option [value]="option">{{ statusLabels[option] }}</option>
         }
       </select>
-    </label>
-
-    <label>
-      Kategori
-      @if (categories().length) {
-        <select [value]="category()" (change)="setCategory($event)">
-          <option value="">Tümü</option>
-          @for (name of categories(); track name) {
-            <option [value]="name">{{ name }}</option>
-          }
-        </select>
-      } @else {
-        <input type="text" [formControl]="categoryControl" placeholder="Örn. giyim" />
-      }
     </label>
   </div>
 
@@ -73,10 +92,14 @@
     @if (hasFilters) {
       <h2>Sonuç bulunamadı</h2>
       <p>Bu arama ve filtrelere uygun ilan yok. Filtreleri gevşetmeyi deneyin.</p>
+      <button type="button" class="btn btn-ghost" (click)="clearFilters()">Filtreleri temizle</button>
     } @else {
       <h2>Henüz ilan yok</h2>
-      <p>Kayıp veya bulunan bir eşya ekleyerek kampüs panosunu başlatın.</p>
-      <a routerLink="/yeni" class="btn btn-primary">Yeni ilan ekle</a>
+      <p>Kaybettim veya Buldum akışından ilk ilanı ekleyin.</p>
+      <div class="empty-actions">
+        <a routerLink="/kaybettim" class="btn btn-lost">Kaybettim</a>
+        <a routerLink="/buldum" class="btn btn-found">Buldum</a>
+      </div>
     }
   </div>
 } @else if (items().length) {

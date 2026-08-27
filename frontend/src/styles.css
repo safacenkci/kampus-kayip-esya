@@ -117,6 +117,16 @@ textarea {
   padding: 0.48rem 0.9rem;
 }
 
+.btn-lost {
+  background: color-mix(in srgb, var(--lost) 88%, black);
+  color: #fff8f4;
+}
+
+.btn-found {
+  background: color-mix(in srgb, var(--found) 84%, black);
+  color: #f3fffb;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

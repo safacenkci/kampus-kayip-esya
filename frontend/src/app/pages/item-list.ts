@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ItemCard } from '../components/item-card';
+import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS } from '../models/catalog';
 import {
   Item,
   ItemQuery,
@@ -25,13 +26,14 @@ export class ItemList implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly searchControl = new FormControl('', { nonNullable: true });
-  readonly categoryControl = new FormControl('', { nonNullable: true });
   readonly kind = signal('');
   readonly status = signal('');
   readonly category = signal('');
+  readonly location = signal('');
 
   readonly items = signal<Item[]>([]);
-  readonly categories = signal<string[]>([]);
+  readonly categories = signal<string[]>([...FALLBACK_CATEGORIES]);
+  readonly locations = signal<string[]>([...FALLBACK_LOCATIONS]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -45,20 +47,17 @@ export class ItemList implements OnInit {
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadItems());
 
-    this.categoryControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => {
-        this.category.set(value.trim());
-        this.loadItems();
-      });
-
-    this.loadCategories();
+    this.loadCatalog();
     this.loadItems();
   }
 
   get hasFilters(): boolean {
     return Boolean(
-      this.searchControl.value.trim() || this.kind() || this.status() || this.category(),
+      this.searchControl.value.trim() ||
+        this.kind() ||
+        this.status() ||
+        this.category() ||
+        this.location(),
     );
   }
 
@@ -77,12 +76,17 @@ export class ItemList implements OnInit {
     this.loadItems();
   }
 
+  setLocation(event: Event): void {
+    this.location.set((event.target as HTMLSelectElement).value);
+    this.loadItems();
+  }
+
   clearFilters(): void {
     this.searchControl.setValue('', { emitEvent: false });
-    this.categoryControl.setValue('', { emitEvent: false });
     this.kind.set('');
     this.status.set('');
     this.category.set('');
+    this.location.set('');
     this.loadItems();
   }
 
@@ -95,6 +99,7 @@ export class ItemList implements OnInit {
       kind: this.kind(),
       status: this.status(),
       category: this.category(),
+      location: this.location(),
     };
 
     this.api.list(query).subscribe({
@@ -110,10 +115,12 @@ export class ItemList implements OnInit {
     });
   }
 
-  private loadCategories(): void {
+  private loadCatalog(): void {
     this.api.categories().subscribe({
       next: (categories) => this.categories.set(categories),
-      error: () => this.categories.set([]),
+    });
+    this.api.locations().subscribe({
+      next: (locations) => this.locations.set(locations),
     });
   }
 }

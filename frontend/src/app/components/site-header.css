@@ -75,6 +75,22 @@
   background: color-mix(in srgb, white 12%, transparent);
 }
 
+.btn-lost {
+  background: color-mix(in srgb, var(--lost) 86%, black);
+  color: #fff8f4;
+}
+
+.btn-found {
+  background: color-mix(in srgb, var(--found) 82%, black);
+  color: #f3fffb;
+}
+
+.btn-lost.is-active,
+.btn-found.is-active {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
 @media (max-width: 640px) {
   .brand-copy small {
     display: none;

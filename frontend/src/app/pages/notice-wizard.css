@@ -1,0 +1,149 @@
+.wizard {
+  display: grid;
+  gap: 1rem;
+}
+
+.wizard[data-kind='lost'] .step.is-current .step-index,
+.wizard[data-kind='lost'] .btn-primary {
+  background: var(--lost);
+}
+
+.wizard[data-kind='found'] .step.is-current .step-index,
+.wizard[data-kind='found'] .btn-primary {
+  background: var(--found);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.step {
+  width: 100%;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 16px;
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+}
+
+.step small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.step-index {
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #d9cfc0;
+  color: #fff;
+  font-weight: 800;
+  flex: none;
+}
+
+.step.is-current {
+  border-color: color-mix(in srgb, var(--pine) 35%, var(--line));
+}
+
+.step.is-done .step-index {
+  background: var(--pine);
+}
+
+.panel,
+.skeleton {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 1.15rem;
+  display: grid;
+  gap: 0.85rem;
+  box-shadow: var(--shadow);
+}
+
+.skeleton {
+  height: 360px;
+}
+
+legend {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  padding: 0;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+  font-size: 0.92rem;
+}
+
+.hint,
+.hint-error {
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 0;
+}
+
+.hint-error {
+  color: var(--danger);
+}
+
+.callout {
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--gold) 16%, white);
+  color: var(--ink-soft);
+}
+
+.review {
+  border-top: 1px solid var(--line);
+  padding-top: 0.85rem;
+}
+
+.review h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.review dl {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.review div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
