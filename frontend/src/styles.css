@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --pine: #1c4a3c;
+  --pine-soft: #2f6a56;
+  --gold: #e0b15a;
+  --paper: #fffaf2;
+  --canvas: #efe6d6;
+  --ink: #1d2a24;
+  --ink-soft: #31443b;
+  --muted: #66756d;
+  --line: #e1d4c0;
+  --lost: #b24528;
+  --found: #1f7a68;
+  --open: #2f6a56;
+  --claimed: #8a5a16;
+  --closed: #5d6762;
+  --danger: #9d2a2a;
+  --shadow: 0 10px 28px rgba(48, 36, 18, 0.08);
+  --shadow-hover: 0 16px 34px rgba(48, 36, 18, 0.14);
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Source Sans 3', 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(224, 177, 90, 0.18), transparent 28%),
+    linear-gradient(180deg, #f6efe3 0%, var(--canvas) 100%);
+}
+
+img {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 0.62rem 0.75rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--pine) 35%, white);
+  border-color: var(--pine-soft);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--pine);
+  color: #f7f1e6;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--pine-soft);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+}
+
+.btn-danger {
+  background: color-mix(in srgb, var(--danger) 10%, white);
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, white);
+}
+
+.btn-compact {
+  padding: 0.48rem 0.9rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  background: #fff;
+}
+
+.chip-lost {
+  background: color-mix(in srgb, var(--lost) 16%, white);
+  color: var(--lost);
+}
+
+.chip-found {
+  background: color-mix(in srgb, var(--found) 16%, white);
+  color: var(--found);
+}
+
+.chip-status-open {
+  background: color-mix(in srgb, var(--open) 16%, white);
+  color: var(--open);
+}
+
+.chip-status-claimed {
+  background: color-mix(in srgb, var(--claimed) 18%, white);
+  color: var(--claimed);
+}
+
+.chip-status-closed {
+  background: color-mix(in srgb, var(--closed) 16%, white);
+  color: var(--closed);
+}
+
+.banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  margin-bottom: 1rem;
+}
+
+.banner p {
+  margin: 0;
+}
+
+.banner-error {
+  background: #fbeceb;
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 22%, white);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  font-weight: 750;
+  color: var(--pine-soft);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

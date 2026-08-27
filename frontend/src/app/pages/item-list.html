@@ -1,0 +1,88 @@
+<section class="hero">
+  <div>
+    <p class="eyebrow">Kampüs panosu</p>
+    <h1>Kayıp mı, bulundu mu?</h1>
+    <p class="lede">
+      Kampüsteki kayıp ve bulunan eşyaları arayın, filtreleyin veya yeni bir ilan ekleyin.
+    </p>
+  </div>
+</section>
+
+<section class="filters" aria-label="Arama ve filtreler">
+  <label class="search">
+    <span class="sr-only">Metin ara</span>
+    <input type="search" [formControl]="searchControl" placeholder="Başlık, yer veya açıklama ara…" />
+  </label>
+
+  <div class="filter-row">
+    <label>
+      Tür
+      <select [value]="kind()" (change)="setKind($event)">
+        <option value="">Tümü</option>
+        @for (option of kindOptions; track option) {
+          <option [value]="option">{{ kindLabels[option] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Durum
+      <select [value]="status()" (change)="setStatus($event)">
+        <option value="">Tümü</option>
+        @for (option of statusOptions; track option) {
+          <option [value]="option">{{ statusLabels[option] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Kategori
+      @if (categories().length) {
+        <select [value]="category()" (change)="setCategory($event)">
+          <option value="">Tümü</option>
+          @for (name of categories(); track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+      } @else {
+        <input type="text" [formControl]="categoryControl" placeholder="Örn. giyim" />
+      }
+    </label>
+  </div>
+
+  @if (hasFilters) {
+    <button type="button" class="btn btn-ghost" (click)="clearFilters()">Filtreleri temizle</button>
+  }
+</section>
+
+@if (error()) {
+  <div class="banner banner-error" role="alert">
+    <p>{{ error() }}</p>
+    <button type="button" class="btn btn-ghost" (click)="loadItems()">Yeniden dene</button>
+  </div>
+}
+
+@if (loading()) {
+  <div class="grid">
+    @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+      <div class="skeleton-card"></div>
+    }
+  </div>
+} @else if (!error() && items().length === 0) {
+  <div class="empty">
+    @if (hasFilters) {
+      <h2>Sonuç bulunamadı</h2>
+      <p>Bu arama ve filtrelere uygun ilan yok. Filtreleri gevşetmeyi deneyin.</p>
+    } @else {
+      <h2>Henüz ilan yok</h2>
+      <p>Kayıp veya bulunan bir eşya ekleyerek kampüs panosunu başlatın.</p>
+      <a routerLink="/yeni" class="btn btn-primary">Yeni ilan ekle</a>
+    }
+  </div>
+} @else if (items().length) {
+  <div class="grid">
+    @for (item of items(); track item.id) {
+      <app-item-card [item]="item" />
+    }
+  </div>
+}
