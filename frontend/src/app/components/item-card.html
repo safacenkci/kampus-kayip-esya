@@ -1,4 +1,4 @@
-<a class="card" [routerLink]="['/', item().id]">
+<a class="card" [class.kind-lost]="item().kind === 'lost'" [class.kind-found]="item().kind === 'found'" [routerLink]="['/ilan', item().id]">
   <div class="card-media" [class.no-photo]="!item().photoUrl">
     @if (item().photoUrl) {
       <img [src]="item().photoUrl" [alt]="item().title" loading="lazy" />

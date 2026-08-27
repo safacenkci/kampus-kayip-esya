@@ -9,8 +9,8 @@
     </div>
   </div>
 } @else if (item(); as item) {
-  <article class="detail">
-    <a routerLink="/" class="back">← İlanlara dön</a>
+  <article class="detail" [class.flow-lost]="item.kind === 'lost'" [class.flow-found]="item.kind === 'found'">
+    <a [routerLink]="boardLink()" class="back">← {{ item.kind === 'lost' ? 'Kaybettim ilanlarına dön' : 'Buldum ilanlarına dön' }}</a>
 
     <div class="detail-grid">
       <div class="media">
@@ -41,10 +41,16 @@
           <div>
             <dt>İletişim</dt>
             <dd>
-              @if (contactHref(item.contact); as href) {
-                <a [href]="href">{{ item.contact }}</a>
+              @if (item.status === 'open') {
+                <span class="contact-hidden">İletişim, ilan sahiplenilene kadar gizli.</span>
+              } @else if (canShowContact(item) && item.contact) {
+                @if (contactHref(item.contact); as href) {
+                  <a [href]="href">{{ item.contact }}</a>
+                } @else {
+                  {{ item.contact }}
+                }
               } @else {
-                {{ item.contact }}
+                <span class="contact-hidden">İletişim bilgisi yok.</span>
               }
             </dd>
           </div>
@@ -53,8 +59,26 @@
         <h2>Açıklama</h2>
         <p class="description">{{ item.description }}</p>
 
+        <section class="timeline-box">
+          <h2>Durum geçmişi</h2>
+          <ol class="timeline">
+            @for (event of timeline(); track $index) {
+              <li [class]="'is-' + event.status">
+                <span class="timeline-dot" aria-hidden="true"></span>
+                <div>
+                  <strong>{{ historyLabel(event.status) }}</strong>
+                  @if (event.at) {
+                    <time>{{ formatDate(event.at) }}</time>
+                  }
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
         <section class="status-box">
           <h2>Durumu değiştir</h2>
+          <p class="status-hint">Sıra: açık → sahiplenildi → kapandı</p>
           <div class="status-actions">
             @for (status of statusOptions; track status) {
               <button
@@ -76,7 +100,7 @@
         }
 
         <div class="row-actions">
-          <a [routerLink]="['/', item.id, 'duzenle']" class="btn btn-ghost">Düzenle</a>
+          <a [routerLink]="['/ilan', item.id, 'duzenle']" class="btn btn-ghost">Düzenle</a>
           @if (!confirmDelete()) {
             <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="confirmDelete.set(true)">
               Sil
@@ -91,5 +115,45 @@
         </div>
       </div>
     </div>
+
+    <section class="matches" aria-live="polite">
+      <h2>
+        @if (item.kind === 'lost') {
+          Olası eşleşmeler — aynı yer ve kategoride bulunan açık ilanlar
+        } @else {
+          Olası eşleşmeler — aynı yer ve kategoride kayıp açık ilanlar
+        }
+      </h2>
+      <p class="matches-lede">
+        Karşıt tür: {{ item.kind === 'lost' ? 'Buldum' : 'Kaybettim' }}. Aynı kategori
+        ({{ item.category || '—' }}) ve konum ({{ item.location || '—' }}), durumu açık.
+        @if (!matchesFromApi() && !matchesLoading() && !matchesError()) {
+          Eşleşme uç noktası yoksa açık ilan listesi tarayıcıda süzülür.
+        }
+      </p>
+
+      @if (matchesError()) {
+        <div class="banner banner-error" role="alert">
+          <p>{{ matchesError() }}</p>
+          <button type="button" class="btn btn-ghost" (click)="retryMatches()">Yeniden dene</button>
+        </div>
+      } @else if (matchesLoading()) {
+        <div class="match-grid">
+          @for (n of [1, 2, 3]; track n) {
+            <div class="skeleton-card"></div>
+          }
+        </div>
+      } @else if (matches().length === 0) {
+        <div class="empty-matches">
+          <p>Şu an eşleşen açık ilan yok. Aynı kategori ve konumda karşıt türde ilan çıkınca burada görünür.</p>
+        </div>
+      } @else {
+        <div class="match-grid">
+          @for (match of matches(); track match.id) {
+            <app-item-card [item]="match" />
+          }
+        </div>
+      }
+    </section>
   </article>
 }

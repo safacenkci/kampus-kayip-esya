@@ -15,11 +15,22 @@
 
 .media,
 .panel,
-.skeleton-detail {
+.skeleton-detail,
+.empty-matches {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 22px;
   box-shadow: var(--shadow);
+}
+
+.flow-lost .panel,
+.flow-lost .media {
+  border-color: color-mix(in srgb, var(--lost) 28%, var(--line));
+}
+
+.flow-found .panel,
+.flow-found .media {
+  border-color: color-mix(in srgb, var(--found) 28%, var(--line));
 }
 
 .media {
@@ -60,7 +71,10 @@ h1 {
 }
 
 .when,
-.description {
+.description,
+.status-hint,
+.matches-lede,
+.contact-hidden {
   color: var(--muted);
 }
 
@@ -92,10 +106,59 @@ h2 {
   font-size: 1rem;
 }
 
+.timeline-box,
 .status-box {
   margin-top: 1.2rem;
   padding-top: 1rem;
   border-top: 1px solid var(--line);
+}
+
+.timeline {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.7rem;
+  align-items: start;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: var(--closed);
+}
+
+.is-open .timeline-dot {
+  background: var(--open);
+}
+
+.is-claimed .timeline-dot {
+  background: var(--claimed);
+}
+
+.is-closed .timeline-dot {
+  background: var(--closed);
+}
+
+.timeline time {
+  display: block;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.status-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
 }
 
 .status-actions,
@@ -109,6 +172,45 @@ h2 {
 
 .row-actions {
   margin-top: 1.2rem;
+}
+
+.matches {
+  margin-top: 1.6rem;
+}
+
+.matches h2 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.empty-matches,
+.skeleton-detail {
+  padding: 1.1rem;
+}
+
+.empty-matches p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.skeleton-card {
+  height: 220px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #e6ddd0 25%, #f4eee4 50%, #e6ddd0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-detail {

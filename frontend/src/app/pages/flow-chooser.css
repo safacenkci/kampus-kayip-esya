@@ -1,0 +1,98 @@
+.chooser h1 {
+  margin: 0.15rem 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.7rem);
+}
+
+.lede {
+  margin: 0 0 1.4rem;
+  max-width: 40rem;
+  color: var(--muted);
+  font-size: 1.08rem;
+}
+
+.flow-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.flow-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1.35rem 1.3rem 1.25rem;
+  border-radius: 22px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  min-height: 220px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.flow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.flow-lost {
+  border-color: color-mix(in srgb, var(--lost) 35%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--lost) 10%, white), var(--paper) 42%);
+}
+
+.flow-found {
+  border-color: color-mix(in srgb, var(--found) 35%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--found) 10%, white), var(--paper) 42%);
+}
+
+.flow-kicker {
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.flow-lost .flow-kicker,
+.flow-lost .flow-cta {
+  color: var(--lost);
+}
+
+.flow-found .flow-kicker,
+.flow-found .flow-cta {
+  color: var(--found);
+}
+
+.flow-card h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+}
+
+.flow-card p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.flow-cta {
+  margin-top: auto;
+  font-weight: 750;
+}
+
+.chooser-foot {
+  margin: 1.3rem 0 0;
+  color: var(--muted);
+}
+
+.chooser-foot a {
+  color: var(--pine);
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .flow-grid {
+    grid-template-columns: 1fr;
+  }
+}

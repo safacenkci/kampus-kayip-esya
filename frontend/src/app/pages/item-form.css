@@ -6,6 +6,16 @@
   text-decoration: none;
 }
 
+.flow-lost .eyebrow,
+.flow-lost h1 {
+  color: var(--lost);
+}
+
+.flow-found .eyebrow,
+.flow-found h1 {
+  color: var(--found);
+}
+
 h1 {
   margin: 0;
   font-family: var(--font-display);
@@ -26,12 +36,19 @@ h1 {
   box-shadow: var(--shadow);
 }
 
+.flow-lost .panel {
+  border-color: color-mix(in srgb, var(--lost) 28%, var(--line));
+}
+
+.flow-found .panel {
+  border-color: color-mix(in srgb, var(--found) 28%, var(--line));
+}
+
 .skeleton {
   height: 420px;
 }
 
-label,
-.category-field {
+label {
   display: grid;
   gap: 0.35rem;
   font-weight: 650;
@@ -45,13 +62,22 @@ label,
 }
 
 .hint,
-.hint-error {
+.hint-error,
+.flow-note {
   font-weight: 500;
   font-size: 0.82rem;
 }
 
-.hint {
+.hint,
+.flow-note {
   color: var(--muted);
+}
+
+.flow-note {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--canvas) 65%, white);
 }
 
 .hint-error {
@@ -62,17 +88,6 @@ label,
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-}
-
-.linkish {
-  border: 0;
-  background: none;
-  color: var(--pine);
-  font-weight: 650;
-  cursor: pointer;
-  padding: 0;
-  text-align: left;
-  width: max-content;
 }
 
 @media (max-width: 720px) {

@@ -102,6 +102,24 @@ textarea {
   background: var(--pine-soft);
 }
 
+.btn-lost {
+  background: var(--lost);
+  color: #fff8f4;
+}
+
+.btn-lost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--lost) 82%, black);
+}
+
+.btn-found {
+  background: var(--found);
+  color: #f3fffb;
+}
+
+.btn-found:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--found) 82%, black);
+}
+
 .btn-ghost {
   background: transparent;
   border-color: var(--line);

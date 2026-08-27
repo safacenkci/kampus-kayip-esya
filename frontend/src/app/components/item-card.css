@@ -22,6 +22,24 @@
   box-shadow: var(--shadow-hover);
 }
 
+.kind-lost {
+  border-color: color-mix(in srgb, var(--lost) 32%, var(--line));
+  box-shadow: inset 0 4px 0 var(--lost), var(--shadow);
+}
+
+.kind-found {
+  border-color: color-mix(in srgb, var(--found) 32%, var(--line));
+  box-shadow: inset 0 4px 0 var(--found), var(--shadow);
+}
+
+.kind-lost:hover {
+  box-shadow: inset 0 4px 0 var(--lost), var(--shadow-hover);
+}
+
+.kind-found:hover {
+  box-shadow: inset 0 4px 0 var(--found), var(--shadow-hover);
+}
+
 .card-media {
   position: relative;
   aspect-ratio: 4 / 3;

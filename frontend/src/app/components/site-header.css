@@ -75,12 +75,20 @@
   background: color-mix(in srgb, white 12%, transparent);
 }
 
-@media (max-width: 640px) {
+.nav-lost.is-active {
+  background: color-mix(in srgb, var(--lost) 55%, transparent);
+}
+
+.nav-found.is-active {
+  background: color-mix(in srgb, var(--found) 50%, transparent);
+}
+
+@media (max-width: 720px) {
   .brand-copy small {
     display: none;
   }
 
-  .topbar-nav a:not(.btn) {
-    display: none;
+  .topbar-inner {
+    flex-wrap: wrap;
   }
 }

@@ -1,10 +1,11 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ItemCard } from '../components/item-card';
 import {
+  BoardFlow,
   Item,
   ItemQuery,
   KIND_LABELS,
@@ -16,22 +17,25 @@ import { ItemService } from '../services/item.service';
 
 @Component({
   selector: 'app-item-list',
-  imports: [ReactiveFormsModule, RouterLink, ItemCard],
+  imports: [ReactiveFormsModule, RouterLink, RouterLinkActive, ItemCard],
   templateUrl: './item-list.html',
   styleUrl: './item-list.css',
 })
 export class ItemList implements OnInit {
   private readonly api = inject(ItemService);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly searchControl = new FormControl('', { nonNullable: true });
-  readonly categoryControl = new FormControl('', { nonNullable: true });
+  readonly flow = signal<BoardFlow>('all');
   readonly kind = signal('');
   readonly status = signal('');
   readonly category = signal('');
+  readonly location = signal('');
 
   readonly items = signal<Item[]>([]);
   readonly categories = signal<string[]>([]);
+  readonly locations = signal<string[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -45,20 +49,24 @@ export class ItemList implements OnInit {
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadItems());
 
-    this.categoryControl.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => {
-        this.category.set(value.trim());
-        this.loadItems();
-      });
+    this.route.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
+      const flow = (data['flow'] as BoardFlow | undefined) ?? 'all';
+      this.flow.set(flow);
+      this.kind.set(flow === 'all' ? '' : flow);
+      this.loadItems();
+    });
 
-    this.loadCategories();
-    this.loadItems();
+    this.loadLookups();
   }
 
   get hasFilters(): boolean {
+    const flowLockedKind = this.flow() !== 'all';
     return Boolean(
-      this.searchControl.value.trim() || this.kind() || this.status() || this.category(),
+      this.searchControl.value.trim() ||
+        (!flowLockedKind && this.kind()) ||
+        this.status() ||
+        this.category() ||
+        this.location(),
     );
   }
 
@@ -77,12 +85,17 @@ export class ItemList implements OnInit {
     this.loadItems();
   }
 
+  setLocation(event: Event): void {
+    this.location.set((event.target as HTMLSelectElement).value);
+    this.loadItems();
+  }
+
   clearFilters(): void {
     this.searchControl.setValue('', { emitEvent: false });
-    this.categoryControl.setValue('', { emitEvent: false });
-    this.kind.set('');
     this.status.set('');
     this.category.set('');
+    this.location.set('');
+    this.kind.set(this.flow() === 'all' ? '' : this.flow());
     this.loadItems();
   }
 
@@ -90,11 +103,13 @@ export class ItemList implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
+    const flow = this.flow();
     const query: ItemQuery = {
       q: this.searchControl.value.trim(),
-      kind: this.kind(),
+      kind: flow === 'all' ? this.kind() : flow,
       status: this.status(),
       category: this.category(),
+      location: this.location(),
     };
 
     this.api.list(query).subscribe({
@@ -110,10 +125,12 @@ export class ItemList implements OnInit {
     });
   }
 
-  private loadCategories(): void {
+  private loadLookups(): void {
     this.api.categories().subscribe({
       next: (categories) => this.categories.set(categories),
-      error: () => this.categories.set([]),
+    });
+    this.api.locations().subscribe({
+      next: (locations) => this.locations.set(locations),
     });
   }
 }

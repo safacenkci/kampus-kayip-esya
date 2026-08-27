@@ -1,8 +1,18 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Item, ItemPayload, ItemQuery, ItemStatus } from '../models/item';
+import {
+  FALLBACK_CATEGORIES,
+  FALLBACK_LOCATIONS,
+  Item,
+  ItemPayload,
+  ItemQuery,
+  ItemStatus,
+  mergeLookups,
+  sameLookup,
+  StatusHistoryEntry,
+} from '../models/item';
 
 @Injectable({ providedIn: 'root' })
 export class ItemService {
@@ -17,8 +27,16 @@ export class ItemService {
       }
     }
 
+    const requestedLocation = query.location?.trim() ?? '';
+
     return this.http.get<unknown>(`${this.base}/items`, { params }).pipe(
-      map((body) => this.normalizeItems(body)),
+      map((body) => {
+        const items = this.normalizeItems(body);
+        if (!requestedLocation) {
+          return items;
+        }
+        return items.filter((item) => sameLookup(item.location, requestedLocation));
+      }),
       catchError((err) => throwError(() => this.toAppError(err, 'İlanlar yüklenemedi.'))),
     );
   }
@@ -68,8 +86,42 @@ export class ItemService {
 
   categories(): Observable<string[]> {
     return this.http.get<unknown>(`${this.base}/categories`).pipe(
-      map((body) => this.normalizeCategories(body)),
-      catchError((err) => throwError(() => this.toAppError(err, 'Kategoriler yüklenemedi.'))),
+      map((body) =>
+        mergeLookups(this.normalizeNamedList(body, ['categories', 'data', 'value', 'items']), FALLBACK_CATEGORIES),
+      ),
+      catchError(() => of([...FALLBACK_CATEGORIES])),
+    );
+  }
+
+  locations(): Observable<string[]> {
+    return this.http.get<unknown>(`${this.base}/locations`).pipe(
+      map((body) =>
+        mergeLookups(this.normalizeNamedList(body, ['locations', 'data', 'value', 'items']), FALLBACK_LOCATIONS),
+      ),
+      catchError(() => of([...FALLBACK_LOCATIONS])),
+    );
+  }
+
+  matches(id: number): Observable<Item[] | null> {
+    return this.http.get<unknown>(`${this.base}/items/${id}/matches`).pipe(
+      map((body) => this.normalizeItems(body)),
+      catchError((err) => {
+        if (this.isMissingEndpoint(err)) {
+          return of(null);
+        }
+        return throwError(() => this.toAppError(err, 'Eşleşmeler yüklenemedi.'));
+      }),
+    );
+  }
+
+  clientMatches(item: Item, candidates: Item[]): Item[] {
+    return candidates.filter(
+      (candidate) =>
+        candidate.id !== item.id &&
+        candidate.status === 'open' &&
+        candidate.kind !== item.kind &&
+        sameLookup(candidate.category, item.category) &&
+        sameLookup(candidate.location, item.location),
     );
   }
 
@@ -87,9 +139,10 @@ export class ItemService {
       }
       if (body && typeof body === 'object') {
         const message =
-          (body as { title?: string; detail?: string; message?: string }).detail ||
+          (body as { title?: string; detail?: string; message?: string; error?: string }).detail ||
           (body as { title?: string; message?: string }).title ||
-          (body as { message?: string }).message;
+          (body as { message?: string }).message ||
+          (body as { error?: string }).error;
         if (message) {
           return new Error(message);
         }
@@ -104,31 +157,63 @@ export class ItemService {
   }
 
   private normalizeItems(body: unknown): Item[] {
-    const raw = this.unwrapArray(body, ['items', 'data', 'value']);
+    const raw = this.unwrapArray(body, ['items', 'data', 'value', 'matches']);
     return raw.map((entry) => this.normalizeItem(entry));
   }
 
   private normalizeItem(body: unknown, fallback: Partial<Item> = {}): Item {
     const source = this.unwrapObject(body);
+    const status: ItemStatus =
+      source['status'] === 'claimed' || source['status'] === 'closed'
+        ? source['status']
+        : (fallback.status ?? 'open');
+
     return {
       id: Number(source['id'] ?? fallback.id ?? 0),
       title: String(source['title'] ?? ''),
       description: String(source['description'] ?? ''),
       location: String(source['location'] ?? ''),
       category: String(source['category'] ?? ''),
-      contact: String(source['contact'] ?? ''),
+      contact: this.readOptionalContact(source, fallback.contact),
       photoUrl: this.optionalString(source['photoUrl'] ?? source['photoURL']),
       kind: source['kind'] === 'found' ? 'found' : 'lost',
-      status:
-        source['status'] === 'claimed' || source['status'] === 'closed'
-          ? source['status']
-          : (fallback.status ?? 'open'),
+      status,
       createdAt: String(source['createdAt'] ?? source['created_at'] ?? fallback.createdAt ?? ''),
+      statusHistory: this.normalizeHistory(
+        source['statusHistory'] ?? source['status_history'] ?? source['history'],
+      ),
     };
   }
 
-  private normalizeCategories(body: unknown): string[] {
-    const raw = this.unwrapArray(body, ['categories', 'data', 'value', 'items']);
+  private normalizeHistory(raw: unknown): StatusHistoryEntry[] {
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+
+    return raw
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') {
+          return null;
+        }
+        const obj = entry as Record<string, unknown>;
+        const statusValue = String(obj['status'] ?? '').toLowerCase();
+        const status: ItemStatus | null =
+          statusValue === 'open' || statusValue === 'claimed' || statusValue === 'closed'
+            ? statusValue
+            : null;
+        if (!status) {
+          return null;
+        }
+        const at = this.optionalString(
+          obj['at'] ?? obj['changedAt'] ?? obj['createdAt'] ?? obj['timestamp'] ?? obj['date'],
+        );
+        return { status, at };
+      })
+      .filter((entry): entry is StatusHistoryEntry => entry != null);
+  }
+
+  private normalizeNamedList(body: unknown, keys: string[]): string[] {
+    const raw = this.unwrapArray(body, keys);
     const names = raw
       .map((entry) => {
         if (typeof entry === 'string') {
@@ -136,13 +221,29 @@ export class ItemService {
         }
         if (entry && typeof entry === 'object') {
           const obj = entry as Record<string, unknown>;
-          return String(obj['name'] ?? obj['slug'] ?? obj['title'] ?? obj['category'] ?? '').trim();
+          return String(
+            obj['name'] ?? obj['slug'] ?? obj['title'] ?? obj['category'] ?? obj['location'] ?? obj['value'] ?? '',
+          ).trim();
         }
         return '';
       })
       .filter(Boolean);
 
     return [...new Set(names)];
+  }
+
+  private readOptionalContact(source: Record<string, unknown>, fallback?: string | null): string | null {
+    if ('contact' in source) {
+      return this.optionalString(source['contact']);
+    }
+    if ('Contact' in source) {
+      return this.optionalString(source['Contact']);
+    }
+    return fallback ?? null;
+  }
+
+  private isMissingEndpoint(err: unknown): boolean {
+    return err instanceof HttpErrorResponse && (err.status === 404 || err.status === 405 || err.status === 501);
   }
 
   private isEmptyBody(body: unknown): boolean {

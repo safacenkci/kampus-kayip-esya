@@ -1,7 +1,14 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { KIND_LABELS, KIND_OPTIONS, ItemKind, ItemPayload, ItemStatus } from '../models/item';
+import {
+  ensureCurrentLookup,
+  FALLBACK_CATEGORIES,
+  FALLBACK_LOCATIONS,
+  ItemKind,
+  ItemPayload,
+  ItemStatus,
+} from '../models/item';
 import { ItemService } from '../services/item.service';
 
 @Component({
@@ -18,15 +25,14 @@ export class ItemForm implements OnInit {
 
   readonly isEdit = signal(false);
   readonly itemId = signal<number | null>(null);
+  readonly kind = signal<ItemKind>('lost');
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
-  readonly categories = signal<string[]>([]);
-  readonly useCustomCategory = signal(true);
+  readonly categories = signal<string[]>([...FALLBACK_CATEGORIES]);
+  readonly locations = signal<string[]>([...FALLBACK_LOCATIONS]);
   readonly existingStatus = signal<ItemStatus>('open');
-
-  readonly kindOptions = KIND_OPTIONS;
-  readonly kindLabels = KIND_LABELS;
+  readonly existingContact = signal<string | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.minLength(2)]],
@@ -35,13 +41,17 @@ export class ItemForm implements OnInit {
     category: ['', Validators.required],
     contact: ['', Validators.required],
     photoUrl: [''],
-    kind: this.fb.nonNullable.control<ItemKind>('lost', Validators.required),
   });
 
   ngOnInit(): void {
+    const kindFromRoute = this.route.snapshot.data['kind'] as ItemKind | undefined;
+    if (kindFromRoute === 'lost' || kindFromRoute === 'found') {
+      this.kind.set(kindFromRoute);
+    }
+
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam ? Number(idParam) : null;
-    this.loadCategories();
+    this.loadLookups();
 
     if (id && Number.isFinite(id)) {
       this.isEdit.set(true);
@@ -50,16 +60,11 @@ export class ItemForm implements OnInit {
     }
   }
 
-  onCategorySelect(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;
-    if (value === '__custom__') {
-      this.useCustomCategory.set(true);
-      this.form.controls.category.setValue('');
-      return;
+  get backLink(): string {
+    if (this.isEdit() && this.itemId()) {
+      return `/ilan/${this.itemId()}`;
     }
-
-    this.useCustomCategory.set(false);
-    this.form.controls.category.setValue(value);
+    return this.kind() === 'found' ? '/buldum' : '/kaybettim';
   }
 
   submit(): void {
@@ -76,7 +81,7 @@ export class ItemForm implements OnInit {
       category: value.category.trim(),
       contact: value.contact.trim(),
       photoUrl: value.photoUrl.trim(),
-      kind: value.kind,
+      kind: this.kind(),
       status: this.isEdit() ? this.existingStatus() : 'open',
     };
 
@@ -88,7 +93,7 @@ export class ItemForm implements OnInit {
       : this.api.create(payload);
 
     request.subscribe({
-      next: (item) => this.router.navigateByUrl(item.id ? `/${item.id}` : '/'),
+      next: (item) => this.router.navigateByUrl(item.id ? `/ilan/${item.id}` : this.backLink),
       error: (err: Error) => {
         this.error.set(err.message);
         this.saving.set(false);
@@ -101,16 +106,14 @@ export class ItemForm implements OnInit {
     return control.invalid && control.touched;
   }
 
-  private loadCategories(): void {
+  private loadLookups(): void {
     this.api.categories().subscribe({
-      next: (categories) => {
-        this.categories.set(categories);
-        this.syncCategoryMode();
-      },
-      error: () => {
-        this.categories.set([]);
-        this.useCustomCategory.set(true);
-      },
+      next: (categories) =>
+        this.categories.set(ensureCurrentLookup(categories, this.form.controls.category.value)),
+    });
+    this.api.locations().subscribe({
+      next: (locations) =>
+        this.locations.set(ensureCurrentLookup(locations, this.form.controls.location.value)),
     });
   }
 
@@ -120,17 +123,23 @@ export class ItemForm implements OnInit {
 
     this.api.get(id).subscribe({
       next: (item) => {
+        this.kind.set(item.kind);
         this.existingStatus.set(item.status);
+        this.existingContact.set(item.contact);
         this.form.patchValue({
           title: item.title,
           description: item.description,
           location: item.location,
           category: item.category,
-          contact: item.contact,
+          contact: item.contact ?? '',
           photoUrl: item.photoUrl ?? '',
-          kind: item.kind,
         });
-        this.syncCategoryMode(item.category);
+        if (item.status === 'open' && !item.contact) {
+          this.form.controls.contact.clearValidators();
+          this.form.controls.contact.updateValueAndValidity();
+        }
+        this.categories.update((list) => ensureCurrentLookup(list, item.category));
+        this.locations.update((list) => ensureCurrentLookup(list, item.location));
         this.loading.set(false);
       },
       error: (err: Error) => {
@@ -138,19 +147,5 @@ export class ItemForm implements OnInit {
         this.loading.set(false);
       },
     });
-  }
-
-  private syncCategoryMode(currentCategory?: string): void {
-    const category = currentCategory ?? this.form.controls.category.value;
-    const list = this.categories();
-    if (!list.length) {
-      this.useCustomCategory.set(true);
-      return;
-    }
-    if (!category) {
-      this.useCustomCategory.set(false);
-      return;
-    }
-    this.useCustomCategory.set(!list.includes(category));
   }
 }

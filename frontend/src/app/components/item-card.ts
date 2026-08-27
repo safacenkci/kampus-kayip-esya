@@ -16,6 +16,6 @@ export class ItemCard {
   readonly formatDate = formatDateTr;
 
   placeholder(kind: Item['kind']): string {
-    return kind === 'lost' ? 'Kayıp eşya görseli yok' : 'Bulunan eşya görseli yok';
+    return kind === 'lost' ? 'Kaybettim — görsel yok' : 'Buldum — görsel yok';
   }
 }

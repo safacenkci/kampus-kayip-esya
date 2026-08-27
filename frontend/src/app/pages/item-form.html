@@ -1,9 +1,21 @@
-<section class="form-page">
-  <a routerLink="/" class="back">← İlanlara dön</a>
-  <h1>{{ isEdit() ? 'İlanı düzenle' : 'Yeni ilan' }}</h1>
-  <p class="lede">
-    Fotoğraf için dosya yüklemeyin; varsa görsel adresini (URL) yapıştırın.
-  </p>
+<section class="form-page" [class.flow-lost]="kind() === 'lost'" [class.flow-found]="kind() === 'found'">
+  <a [routerLink]="backLink" class="back">← Geri dön</a>
+
+  @if (kind() === 'lost') {
+    <p class="eyebrow">Kaybettim</p>
+    <h1>{{ isEdit() ? 'Kayıp ilanı düzenle' : 'Kayıp ilan ver' }}</h1>
+    <p class="lede">
+      Eşyanı nerede kaybettiğini seçmeli konum ve kategoriyle bildir. İletişim bilgisi, ilan
+      sahiplenilene kadar diğer kullanıcılara gösterilmez.
+    </p>
+  } @else {
+    <p class="eyebrow">Buldum</p>
+    <h1>{{ isEdit() ? 'Bulunan ilanı düzenle' : 'Bulunan eşya bildir' }}</h1>
+    <p class="lede">
+      Kampüste bir eşya mı buldun? Konumu ve kategorisini seç; sahibine ulaşmasına yardım et.
+      İletişimin, ilan sahiplenilene kadar gizli kalır.
+    </p>
+  }
 
   @if (loading()) {
     <div class="panel skeleton"></div>
@@ -13,9 +25,19 @@
         <div class="banner banner-error" role="alert">{{ error() }}</div>
       }
 
+      <p class="flow-note">
+        Bu form yalnızca
+        <strong>{{ kind() === 'lost' ? 'Kaybettim (kayıp)' : 'Buldum (bulunan)' }}</strong>
+        ilanı içindir. Tür açılır listesi yoktur.
+      </p>
+
       <label>
         Başlık
-        <input type="text" formControlName="title" placeholder="Örn. Siyah mont" />
+        <input
+          type="text"
+          formControlName="title"
+          [placeholder]="kind() === 'lost' ? 'Örn. Siyah öğrenci kartı' : 'Örn. Gümüş anahtarlık'"
+        />
         @if (invalid('title')) {
           <span class="hint-error">Başlık en az 2 karakter olmalı.</span>
         }
@@ -23,7 +45,15 @@
 
       <label>
         Açıklama
-        <textarea rows="4" formControlName="description" placeholder="Nerede görüldü veya bırakıldı?"></textarea>
+        <textarea
+          rows="4"
+          formControlName="description"
+          [placeholder]="
+            kind() === 'lost'
+              ? 'En son nerede gördün? Ayırt edici bir ayrıntı yaz.'
+              : 'Nerede buldun, şu an nerede duruyor?'
+          "
+        ></textarea>
         @if (invalid('description')) {
           <span class="hint-error">Açıklama gerekli.</span>
         }
@@ -32,67 +62,70 @@
       <div class="two-col">
         <label>
           Konum
-          <input type="text" formControlName="location" placeholder="Örn. Merkez Kütüphane" />
-          @if (invalid('location')) {
-            <span class="hint-error">Konum gerekli.</span>
-          }
-        </label>
-
-        <label>
-          İletişim
-          <input type="text" formControlName="contact" placeholder="e-posta veya telefon" />
-          @if (invalid('contact')) {
-            <span class="hint-error">İletişim bilgisi gerekli.</span>
-          }
-        </label>
-      </div>
-
-      <div class="two-col">
-        <div class="category-field">
-          <span class="field-label">Kategori</span>
-          @if (categories().length && !useCustomCategory()) {
-            <select
-              [value]="form.controls.category.value"
-              (change)="onCategorySelect($event)"
-            >
-              <option value="" disabled>Seçin</option>
-              @for (name of categories(); track name) {
-                <option [value]="name">{{ name }}</option>
-              }
-              <option value="__custom__">Diğer (yazın)</option>
-            </select>
-          } @else {
-            <input type="text" formControlName="category" placeholder="Örn. giyim, elektronik" />
-            @if (categories().length) {
-              <button type="button" class="linkish" (click)="useCustomCategory.set(false)">Listeden seç</button>
-            }
-          }
-          @if (invalid('category')) {
-            <span class="hint-error">Kategori gerekli.</span>
-          }
-        </div>
-
-        <label>
-          Tür
-          <select formControlName="kind">
-            @for (option of kindOptions; track option) {
-              <option [value]="option">{{ kindLabels[option] }}</option>
+          <select formControlName="location">
+            <option value="" disabled>Kampüs konumunu seçin</option>
+            @for (name of locations(); track name) {
+              <option [value]="name">{{ name }}</option>
             }
           </select>
+          @if (invalid('location')) {
+            <span class="hint-error">Konum seçilmeli; serbest metin yok.</span>
+          }
+        </label>
+
+        <label>
+          Kategori
+          <select formControlName="category">
+            <option value="" disabled>Kategori seçin</option>
+            @for (name of categories(); track name) {
+              <option [value]="name">{{ name }}</option>
+            }
+          </select>
+          @if (invalid('category')) {
+            <span class="hint-error">Kategori seçilmeli; serbest metin yok.</span>
+          }
         </label>
       </div>
 
       <label>
+        İletişim
+        <input type="text" formControlName="contact" placeholder="e-posta veya telefon" />
+        <span class="hint">
+          İlan açıkken detay sayfasında gizlenir. Sahiplenilince görünür.
+          @if (isEdit() && existingStatus() === 'open' && !existingContact()) {
+            API açık ilanda iletişim dönmediyse bu alanı boş bırakabilirsiniz.
+          }
+        </span>
+        @if (invalid('contact')) {
+          <span class="hint-error">İletişim bilgisi gerekli.</span>
+        }
+      </label>
+
+      <label>
         Fotoğraf URL
         <input type="text" formControlName="photoUrl" placeholder="https://..." />
-        <span class="hint">İsteğe bağlı. Dosya seçici yoktur; yalnızca bağlantı.</span>
+        <span class="hint">İsteğe bağlı. Dosya yükleme yoktur; yalnızca bağlantı.</span>
       </label>
 
       <div class="row-actions">
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
-          {{ saving() ? 'Kaydediliyor…' : isEdit() ? 'Değişiklikleri kaydet' : 'İlanı yayınla' }}
+        <button
+          type="submit"
+          class="btn"
+          [class.btn-lost]="kind() === 'lost'"
+          [class.btn-found]="kind() === 'found'"
+          [disabled]="saving()"
+        >
+          @if (saving()) {
+            Kaydediliyor…
+          } @else if (isEdit()) {
+            Değişiklikleri kaydet
+          } @else if (kind() === 'lost') {
+            Kayıp ilanını yayınla
+          } @else {
+            Bulunan ilanı yayınla
+          }
         </button>
-        <a routerLink="/" class="btn btn-ghost">Vazgeç</a>
+        <a [routerLink]="backLink" class="btn btn-ghost">Vazgeç</a>
       </div>
     </form>
   }
