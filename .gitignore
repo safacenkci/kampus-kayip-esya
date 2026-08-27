@@ -1,0 +1,38 @@
+## .NET
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.pidb
+*.svclog
+*.sln.docstates
+.vs/
+.vscode/
+*.DotSettings.user
+project.lock.json
+project.fragment.lock.json
+artifacts/
+TestResults/
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+## OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+
+## Secrets / local overrides
+appsettings.*.local.json
+*.pfx
+*.key
+.env
+.env.*
+!.env.example

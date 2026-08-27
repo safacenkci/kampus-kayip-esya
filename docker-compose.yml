@@ -1,0 +1,31 @@
+# Kampüs Kayıp-Eşya — PostgreSQL
+#
+# Run the database:
+#   docker compose up -d postgres
+#
+# Then start the API on http://localhost:5080:
+#   cd backend && dotnet run
+#
+# Connection string (matches backend/appsettings.json):
+#   Host=localhost;Port=5432;Database=kampus_kayip_esya;Username=postgres;Password=postgres
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: kampus-kayip-esya-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kampus_kayip_esya
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kampus_kayip_esya"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
