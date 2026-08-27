@@ -138,7 +138,11 @@ public class ItemsController : ControllerBase
             CreatedAt = now
         };
 
-        ItemRules.RecordStatus(item, status ?? ItemRules.StatusOpen, now);
+        ItemRules.RecordStatus(item, ItemRules.StatusOpen, now);
+        if (status is not null && status != ItemRules.StatusOpen)
+        {
+            ItemRules.RecordStatus(item, status, now);
+        }
 
         _db.Items.Add(item);
         await _db.SaveChangesAsync(cancellationToken);
