@@ -27,9 +27,27 @@ public class AppDbContext : DbContext
         item.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
         item.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
 
+        item.HasMany(e => e.StatusHistory)
+            .WithOne()
+            .HasForeignKey(e => e.ItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        item.Navigation(e => e.StatusHistory).AutoInclude();
+
         item.HasIndex(e => e.Category);
         item.HasIndex(e => e.Kind);
         item.HasIndex(e => e.Status);
         item.HasIndex(e => e.CreatedAt);
+        item.HasIndex(e => e.Location);
+
+        var history = modelBuilder.Entity<StatusHistoryEntry>();
+        history.ToTable("item_status_history");
+        history.HasKey(e => e.Id);
+        history.Property(e => e.Id).HasColumnName("id");
+        history.Property(e => e.ItemId).HasColumnName("item_id");
+        history.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+        history.Property(e => e.Timestamp).HasColumnName("timestamp").HasColumnType("timestamp with time zone");
+        history.HasIndex(e => e.ItemId);
+        history.HasIndex(e => e.Timestamp);
     }
 }

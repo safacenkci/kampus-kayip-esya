@@ -19,9 +19,10 @@ public class ItemsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Item>>> GetItems(
         [FromQuery] string? q,
-        [FromQuery] string? category,
-        [FromQuery] string? status,
         [FromQuery] string? kind,
+        [FromQuery] string? category,
+        [FromQuery] string? location,
+        [FromQuery] string? status,
         CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(kind) && !ItemRules.TryNormalizeKind(kind, out kind))
@@ -45,15 +46,21 @@ public class ItemsController : ControllerBase
                 (i.Location != null && EF.Functions.ILike(i.Location, pattern, "\\")));
         }
 
+        if (!string.IsNullOrWhiteSpace(kind))
+        {
+            query = query.Where(i => i.Kind == kind);
+        }
+
         if (!string.IsNullOrWhiteSpace(category))
         {
             var categoryFilter = category.Trim();
             query = query.Where(i => i.Category != null && i.Category.ToLower() == categoryFilter.ToLower());
         }
 
-        if (!string.IsNullOrWhiteSpace(kind))
+        if (!string.IsNullOrWhiteSpace(location))
         {
-            query = query.Where(i => i.Kind == kind);
+            var locationFilter = location.Trim();
+            query = query.Where(i => i.Location != null && i.Location.ToLower() == locationFilter.ToLower());
         }
 
         if (!string.IsNullOrWhiteSpace(status))
@@ -66,7 +73,7 @@ public class ItemsController : ControllerBase
             .ThenByDescending(i => i.Id)
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        return Ok(items.Select(ItemRules.ForClient));
     }
 
     [HttpGet("{id:int}")]
@@ -78,34 +85,65 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
-        return Ok(item);
+        return Ok(ItemRules.ForClient(item));
+    }
+
+    [HttpGet("{id:int}/matches")]
+    public async Task<ActionResult<IEnumerable<Item>>> GetMatches(int id, CancellationToken cancellationToken)
+    {
+        var source = await _db.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (source is null)
+        {
+            return NotFound();
+        }
+
+        var oppositeKind = source.Kind == ItemRules.KindLost ? ItemRules.KindFound : ItemRules.KindLost;
+
+        var matches = await _db.Items.AsNoTracking()
+            .Where(i =>
+                i.Id != source.Id &&
+                i.Kind == oppositeKind &&
+                i.Status == ItemRules.StatusOpen &&
+                i.Category != null &&
+                source.Category != null &&
+                i.Category.ToLower() == source.Category.ToLower() &&
+                i.Location != null &&
+                source.Location != null &&
+                i.Location.ToLower() == source.Location.ToLower())
+            .OrderByDescending(i => i.CreatedAt)
+            .ThenByDescending(i => i.Id)
+            .ToListAsync(cancellationToken);
+
+        return Ok(matches.Select(ItemRules.ForClient));
     }
 
     [HttpPost]
     public async Task<ActionResult<Item>> CreateItem([FromBody] ItemWriteDto dto, CancellationToken cancellationToken)
     {
-        if (!TryValidateWrite(dto, requireKind: true, out var error, out var kind, out var status))
+        if (!TryValidateWrite(dto, out var error, out var kind, out var status, out var location, out var category))
         {
             return BadRequest(new { error });
         }
 
+        var now = DateTime.UtcNow;
         var item = new Item
         {
             Title = dto.Title!.Trim(),
             Description = NormalizeOptional(dto.Description),
-            Location = NormalizeOptional(dto.Location),
-            Category = NormalizeOptional(dto.Category),
+            Location = location,
+            Category = category,
             Contact = NormalizeOptional(dto.Contact),
             PhotoUrl = NormalizeOptional(dto.PhotoUrl),
             Kind = kind!,
-            Status = status ?? ItemRules.StatusOpen,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
+
+        ItemRules.RecordStatus(item, status ?? ItemRules.StatusOpen, now);
 
         _db.Items.Add(item);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, item);
+        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, ItemRules.ForClient(item));
     }
 
     [HttpPut("{id:int}")]
@@ -117,25 +155,25 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
-        if (!TryValidateWrite(dto, requireKind: true, out var error, out var kind, out var status))
+        if (!TryValidateWrite(dto, out var error, out var kind, out var status, out var location, out var category))
         {
             return BadRequest(new { error });
         }
 
         item.Title = dto.Title!.Trim();
         item.Description = NormalizeOptional(dto.Description);
-        item.Location = NormalizeOptional(dto.Location);
-        item.Category = NormalizeOptional(dto.Category);
+        item.Location = location;
+        item.Category = category;
         item.Contact = NormalizeOptional(dto.Contact);
         item.PhotoUrl = NormalizeOptional(dto.PhotoUrl);
         item.Kind = kind!;
-        if (status is not null)
+        if (status is not null && status != item.Status)
         {
-            item.Status = status;
+            ItemRules.RecordStatus(item, status);
         }
 
         await _db.SaveChangesAsync(cancellationToken);
-        return Ok(item);
+        return Ok(ItemRules.ForClient(item));
     }
 
     [HttpPatch("{id:int}/status")]
@@ -152,9 +190,9 @@ public class ItemsController : ControllerBase
             return BadRequest(new { error = "Invalid status. Allowed values: open, claimed, closed." });
         }
 
-        item.Status = status;
+        ItemRules.RecordStatus(item, status);
         await _db.SaveChangesAsync(cancellationToken);
-        return Ok(item);
+        return Ok(ItemRules.ForClient(item));
     }
 
     [HttpDelete("{id:int}")]
@@ -173,14 +211,17 @@ public class ItemsController : ControllerBase
 
     private static bool TryValidateWrite(
         ItemWriteDto dto,
-        bool requireKind,
         out string? error,
         out string? kind,
-        out string? status)
+        out string? status,
+        out string? location,
+        out string? category)
     {
         error = null;
         kind = null;
         status = null;
+        location = null;
+        category = null;
 
         if (string.IsNullOrWhiteSpace(dto.Title))
         {
@@ -188,16 +229,13 @@ public class ItemsController : ControllerBase
             return false;
         }
 
-        if (requireKind)
+        if (!ItemRules.TryNormalizeKind(dto.Kind, out var normalizedKind))
         {
-            if (!ItemRules.TryNormalizeKind(dto.Kind, out var normalizedKind))
-            {
-                error = "Invalid kind. Allowed values: lost, found.";
-                return false;
-            }
-
-            kind = normalizedKind;
+            error = "Invalid kind. Allowed values: lost, found.";
+            return false;
         }
+
+        kind = normalizedKind;
 
         if (dto.Status is not null && dto.Status.Trim().Length > 0)
         {
@@ -209,6 +247,22 @@ public class ItemsController : ControllerBase
 
             status = normalizedStatus;
         }
+
+        if (!ItemRules.TryNormalizeLocation(dto.Location, out var normalizedLocation))
+        {
+            error = "Invalid location. Allowed values: " + string.Join(", ", ItemRules.Locations) + ".";
+            return false;
+        }
+
+        location = normalizedLocation;
+
+        if (!ItemRules.TryNormalizeCategory(dto.Category, out var normalizedCategory))
+        {
+            error = "Invalid category. Allowed values: " + string.Join(", ", ItemRules.Categories) + ".";
+            return false;
+        }
+
+        category = normalizedCategory;
 
         return true;
     }
