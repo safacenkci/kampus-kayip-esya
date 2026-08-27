@@ -3,8 +3,8 @@
 name: ci-backend
 
 on:
-  push:
-  pull_request:
+  push: {}
+  pull_request: {}
 
 concurrency:
   group: ci-backend-${{ github.workflow }}-${{ github.ref }}
@@ -45,7 +45,7 @@ jobs:
 
     env:
       API_PROJECT_DIR: ${{ github.workspace }}/backend
-      API_LOG: ${{ runner.temp }}/kampus-api.log
+      API_LOG: /tmp/kampus-api.log
 
     steps:
       - name: Checkout
@@ -82,13 +82,13 @@ jobs:
           set -euo pipefail
           nohup dotnet run --project backend/KampusKayipEsya.Api.csproj --no-build --urls http://localhost:5080 \
             >"$API_LOG" 2>&1 &
-          echo $! >"${RUNNER_TEMP}/kampus-api.pid"
+          echo $! >/tmp/kampus-api.pid
           for i in $(seq 1 90); do
             if curl -sf http://localhost:5080/api/categories >/dev/null; then
               echo "API ready after ${i}s"
               exit 0
             fi
-            if ! kill -0 "$(cat "${RUNNER_TEMP}/kampus-api.pid")" 2>/dev/null; then
+            if ! kill -0 "$(cat /tmp/kampus-api.pid)" 2>/dev/null; then
               echo "API process exited before becoming ready"
               cat "$API_LOG"
               exit 1
