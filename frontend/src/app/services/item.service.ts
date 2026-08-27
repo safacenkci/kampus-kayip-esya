@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS } from '../models/catalog';
 import {
@@ -12,10 +12,16 @@ import {
   sameCampusField,
   StatusEvent,
 } from '../models/item';
+import {
+  CANNOT_MANAGE_ITEM_MESSAGE,
+  MANAGE_TOKEN_HEADER,
+  ManageTokenStore,
+} from './manage-token.store';
 
 @Injectable({ providedIn: 'root' })
 export class ItemService {
   private readonly http = inject(HttpClient);
+  private readonly tokens = inject(ManageTokenStore);
   private readonly base = environment.apiBaseUrl;
 
   list(query: ItemQuery = {}): Observable<Item[]> {
@@ -33,7 +39,10 @@ export class ItemService {
   }
 
   get(id: number): Observable<Item> {
-    return this.http.get<unknown>(`${this.base}/items/${id}`).pipe(
+    const token = this.tokens.get(id);
+    const options = token ? this.withManageToken(token) : {};
+
+    return this.http.get<unknown>(`${this.base}/items/${id}`, options).pipe(
       map((body) => this.normalizeItem(body)),
       catchError((err) =>
         throwError(() =>
@@ -45,33 +54,60 @@ export class ItemService {
 
   create(payload: ItemPayload): Observable<Item> {
     return this.http.post<unknown>(`${this.base}/items`, payload).pipe(
-      map((body) => this.normalizeItem(body)),
+      map((body) => {
+        const item = this.normalizeItem(body);
+        const token = this.extractManageToken(body);
+        if (token) {
+          this.tokens.save(item.id, token);
+        }
+        return item;
+      }),
       catchError((err) => throwError(() => this.toAppError(err, 'İlan oluşturulamadı.'))),
     );
   }
 
   update(id: number, payload: ItemPayload): Observable<Item> {
-    return this.http.put<unknown>(`${this.base}/items/${id}`, payload).pipe(
-      map((body) => this.normalizeItem(body)),
-      catchError((err) => throwError(() => this.toAppError(err, 'İlan güncellenemedi.'))),
-    );
+    const token = this.tokens.get(id);
+    if (!token) {
+      return throwError(() => new Error(CANNOT_MANAGE_ITEM_MESSAGE));
+    }
+
+    return this.http
+      .put<unknown>(`${this.base}/items/${id}`, payload, this.withManageToken(token))
+      .pipe(
+        map((body) => this.normalizeItem(body)),
+        catchError((err) => throwError(() => this.toManageError(err, 'İlan güncellenemedi.'))),
+      );
   }
 
   updateStatus(id: number, status: ItemStatus): Observable<Item> {
-    return this.http.patch<unknown>(`${this.base}/items/${id}/status`, { status }).pipe(
-      map((body) => {
-        if (this.isEmptyBody(body)) {
-          return this.normalizeItem({ id, status });
-        }
-        return this.normalizeItem(body, { id, status });
-      }),
-      catchError((err) => throwError(() => this.toAppError(err, 'Durum güncellenemedi.'))),
-    );
+    const token = this.tokens.get(id);
+    if (!token) {
+      return throwError(() => new Error(CANNOT_MANAGE_ITEM_MESSAGE));
+    }
+
+    return this.http
+      .patch<unknown>(`${this.base}/items/${id}/status`, { status }, this.withManageToken(token))
+      .pipe(
+        map((body) => {
+          if (this.isEmptyBody(body)) {
+            return this.normalizeItem({ id, status });
+          }
+          return this.normalizeItem(body, { id, status });
+        }),
+        catchError((err) => throwError(() => this.toManageError(err, 'Durum güncellenemedi.'))),
+      );
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.base}/items/${id}`).pipe(
-      catchError((err) => throwError(() => this.toAppError(err, 'İlan silinemedi.'))),
+    const token = this.tokens.get(id);
+    if (!token) {
+      return throwError(() => new Error(CANNOT_MANAGE_ITEM_MESSAGE));
+    }
+
+    return this.http.delete<void>(`${this.base}/items/${id}`, this.withManageToken(token)).pipe(
+      tap(() => this.tokens.remove(id)),
+      catchError((err) => throwError(() => this.toManageError(err, 'İlan silinemedi.'))),
     );
   }
 
@@ -125,6 +161,24 @@ export class ItemService {
     }
 
     return new Error(fallback);
+  }
+
+  private toManageError(err: unknown, fallback: string): Error {
+    if (err instanceof HttpErrorResponse && err.status === 403) {
+      return new Error(CANNOT_MANAGE_ITEM_MESSAGE);
+    }
+    return this.toAppError(err, fallback);
+  }
+
+  private withManageToken(token: string): { headers: Record<string, string> } {
+    return { headers: { [MANAGE_TOKEN_HEADER]: token } };
+  }
+
+  private extractManageToken(body: unknown): string | null {
+    const source = this.unwrapObject(body);
+    return this.optionalString(
+      source['manageToken'] ?? source['ManageToken'] ?? source['manage_token'],
+    );
   }
 
   private fallbackMatches(item: Item): Observable<Item[]> {
