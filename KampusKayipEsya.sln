@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KampusKayipEsya.Api", "back
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{CF60FCA3-8F3A-47AA-98A6-B15DAF70C5DA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KampusKayipEsya.Api.Tests", "backend\KampusKayipEsya.Api.Tests\KampusKayipEsya.Api.Tests.csproj", "{063F1577-E941-4D2D-A65F-3538CB74AD9D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KampusKayipEsya.Api.IntegrationTests", "backend\tests\KampusKayipEsya.Api.IntegrationTests\KampusKayipEsya.Api.IntegrationTests.csproj", "{191D58FA-DC0C-44C3-BBAC-B611840196EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,13 +22,13 @@ Global
 		{233B77B4-0D5F-414B-9282-0EFECA7670CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{233B77B4-0D5F-414B-9282-0EFECA7670CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{233B77B4-0D5F-414B-9282-0EFECA7670CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{063F1577-E941-4D2D-A65F-3538CB74AD9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{063F1577-E941-4D2D-A65F-3538CB74AD9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{063F1577-E941-4D2D-A65F-3538CB74AD9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{063F1577-E941-4D2D-A65F-3538CB74AD9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{191D58FA-DC0C-44C3-BBAC-B611840196EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{191D58FA-DC0C-44C3-BBAC-B611840196EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{191D58FA-DC0C-44C3-BBAC-B611840196EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{191D58FA-DC0C-44C3-BBAC-B611840196EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{233B77B4-0D5F-414B-9282-0EFECA7670CC} = {CF60FCA3-8F3A-47AA-98A6-B15DAF70C5DA}
-		{063F1577-E941-4D2D-A65F-3538CB74AD9D} = {CF60FCA3-8F3A-47AA-98A6-B15DAF70C5DA}
+		{191D58FA-DC0C-44C3-BBAC-B611840196EF} = {CF60FCA3-8F3A-47AA-98A6-B15DAF70C5DA}
 	EndGlobalSection
 EndGlobal
