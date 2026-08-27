@@ -13,7 +13,7 @@ Generic CRUD yetmez. Bitti = tarayıcıda bu 9 madde kanıtlanmış:
 4. Durum: `open` → `claimed` → `closed` (açık / sahiplenildi / kapandı). Detayda kısa durum geçmişi.
 5. Liste: arama + tip/kategori/konum/durum filtre; kart UI; boş state.
 6. Eşleşme: detayda aynı kategori+konumda açık karşıt ilan önerisi (`lost`↔`found`).
-7. İletişim, durum `claimed` olana kadar gizli (API de `open` iken `contact` dönmez).
+7. **İletişim bilgisi yetkisiz kişiye asla görünmez.** Listede `contact` yok; detayda yalnız geçerli `X-Manage-Token` ile döner.
 8. Türkçe UI. 6–8 gerçekçi seed ilan.
 9. PostgreSQL: refresh sonrası veri durur.
 
@@ -47,6 +47,10 @@ GET    /api/locations
 ```
 
 `kind`: `lost` | `found`. JSON camelCase. CORS: `http://localhost:4200` → `http://localhost:5080`.
+
+`POST /api/items` cevabında bir kez `manageToken` (128-bit, hex) döner; hash saklanır.
+`PUT`, `DELETE` ve `PATCH /api/items/{id}/status` `X-Manage-Token` ister; eşleşmezse `403`.
+`contact` listede ve eşleşmelerde asla dönmez. `GET /api/items/{id}` yalnız geçerli jetonla `contact` verir.
 
 ## Çalıştırma
 

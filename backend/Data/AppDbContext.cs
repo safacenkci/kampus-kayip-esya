@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
         item.Property(e => e.Kind).HasColumnName("kind").HasMaxLength(20).IsRequired();
         item.Property(e => e.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
         item.Property(e => e.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone");
+        item.Property(e => e.ManageTokenHash).HasColumnName("manage_token_hash").HasColumnType("bytea");
 
         item.HasMany(e => e.StatusHistory)
             .WithOne(e => e.Item)
