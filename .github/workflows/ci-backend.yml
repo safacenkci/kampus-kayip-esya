@@ -1,0 +1,216 @@
+# F0-INF-02 — Backend CI
+# Mevcut duman testleri canlı API (http://localhost:5080) + PostgreSQL bekler (F0-QA-01 henüz yok).
+name: ci-backend
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://localhost:5080
+  API_BASE_URL: http://localhost:5080
+  ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=kampus_kayip_esya;Username=postgres;Password=postgres
+
+jobs:
+  backend:
+    name: Backend restore / build / test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kampus_kayip_esya
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d kampus_kayip_esya"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      API_PROJECT_DIR: ${{ github.workspace }}/backend
+      API_LOG: ${{ runner.temp }}/kampus-api.log
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.sln', 'Directory.Build.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # --collect:"XPlat Code Coverage" coverlet.collector ister. Test csproj QA kulvarı
+      # (F0-QA-01); paketi depoda değiştirmeden koşu anında ekliyoruz.
+      - name: Enable XPlat Code Coverage collector
+        run: >
+          dotnet add backend/KampusKayipEsya.Api.Tests/KampusKayipEsya.Api.Tests.csproj
+          package coverlet.collector --version 6.0.4 --no-restore
+
+      - name: Restore
+        run: dotnet restore KampusKayipEsya.sln
+
+      - name: Build
+        run: dotnet build KampusKayipEsya.sln --no-restore
+
+      - name: Start API
+        run: |
+          set -euo pipefail
+          nohup dotnet run --project backend/KampusKayipEsya.Api.csproj --no-build --urls http://localhost:5080 \
+            >"$API_LOG" 2>&1 &
+          echo $! >"${RUNNER_TEMP}/kampus-api.pid"
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:5080/api/categories >/dev/null; then
+              echo "API ready after ${i}s"
+              exit 0
+            fi
+            if ! kill -0 "$(cat "${RUNNER_TEMP}/kampus-api.pid")" 2>/dev/null; then
+              echo "API process exited before becoming ready"
+              cat "$API_LOG"
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "API did not become ready at http://localhost:5080"
+          cat "$API_LOG"
+          exit 1
+
+      - name: Test
+        run: >
+          dotnet test KampusKayipEsya.sln
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+          --collect:"XPlat Code Coverage"
+          --
+          DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+
+      - name: Job summary
+        if: always()
+        run: |
+          python3 <<'PY'
+          import glob
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          def local(tag):
+              return tag.split("}", 1)[-1] if tag else tag
+
+          lines = ["## Backend test sonuçları", ""]
+          trx_files = sorted(glob.glob("TestResults/**/*.trx", recursive=True))
+          if not trx_files:
+              lines.append("TRX dosyası bulunamadı.")
+          else:
+              total = executed = passed = failed = skipped = 0
+              failed_names = []
+              for path in trx_files:
+                  root = ET.parse(path).getroot()
+                  for el in root.iter():
+                      if local(el.tag) != "Counters":
+                          continue
+                      total += int(el.get("total") or 0)
+                      executed += int(el.get("executed") or 0)
+                      passed += int(el.get("passed") or 0)
+                      failed += int(el.get("failed") or 0)
+                      skipped += int(el.get("notExecuted") or el.get("skipped") or 0)
+                  for el in root.iter():
+                      if local(el.tag) == "UnitTestResult" and el.get("outcome") == "Failed":
+                          failed_names.append(el.get("testName") or "(unnamed)")
+              lines.append("| | |")
+              lines.append("|---|---|")
+              lines.append(f"| TRX | `{', '.join(trx_files)}` |")
+              lines.append(f"| Toplam | {total} |")
+              lines.append(f"| Çalışan | {executed} |")
+              lines.append(f"| Geçen | {passed} |")
+              lines.append(f"| Kalan | {failed} |")
+              lines.append(f"| Atlanan | {skipped} |")
+              lines.append("")
+              if failed_names:
+                  lines.append("**Kalan testler:**")
+                  for name in failed_names:
+                      lines.append(f"- `{name}`")
+                  lines.append("")
+
+          lines.extend(["## Kod kapsamı", ""])
+          coverage_files = sorted(glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True))
+          if not coverage_files:
+              lines.append("Cobertura raporu bulunamadı.")
+          else:
+              for path in coverage_files:
+                  root = ET.parse(path).getroot()
+                  line_rate = float(root.get("line-rate") or 0)
+                  branch_rate = float(root.get("branch-rate") or 0)
+                  covered = root.get("lines-covered") or "?"
+                  valid = root.get("lines-valid") or "?"
+                  lines.append(f"- `{path}`")
+                  lines.append(f"  - satır: **{line_rate:.1%}** ({covered}/{valid})")
+                  lines.append(f"  - dal: {branch_rate:.1%}")
+              lines.append("")
+              lines.append(
+                  "_Not: Duman testleri canlı API sürecine HTTP atar; XPlat toplayıcı "
+                  "yalnız test derlemesini ölçer. API kapsamı F0-QA-01 (WebApplicationFactory) ile gelecek. "
+                  "Eşik düşürülmedi; eşik yok._"
+              )
+              lines.append("")
+
+          api_log = os.environ.get("API_LOG")
+          if api_log and Path(api_log).is_file():
+              tail = Path(api_log).read_text(errors="replace").splitlines()[-40:]
+              if tail:
+                  lines.append("## API günlüğü (son 40 satır)")
+                  lines.append("")
+                  lines.append("```")
+                  lines.extend(tail)
+                  lines.append("```")
+                  lines.append("")
+
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              with open(summary, "a", encoding="utf-8") as fh:
+                  fh.write("\n".join(lines) + "\n")
+          print("\n".join(lines))
+          PY
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            TestResults/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload API log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-log
+          path: ${{ env.API_LOG }}
+          if-no-files-found: ignore
+          retention-days: 7
