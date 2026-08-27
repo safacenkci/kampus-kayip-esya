@@ -1,3 +1,4 @@
+using KampusKayipEsya.Api.Authorization;
 using KampusKayipEsya.Api.Data;
 using KampusKayipEsya.Api.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -85,7 +86,10 @@ public class ItemsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ItemResponse>> GetItem(int id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ItemResponse>> GetItem(
+        int id,
+        [FromHeader(Name = ManageToken.HeaderName)] string? manageToken,
+        CancellationToken cancellationToken)
     {
         var item = await _db.Items.AsNoTracking()
             .Include(i => i.StatusHistory)
@@ -95,7 +99,8 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
-        return Ok(ItemMapper.ToResponse(item, includeHistory: true));
+        var hasValidManageToken = ManageToken.Matches(manageToken, item.ManageTokenHash);
+        return Ok(ItemMapper.ToResponse(item, includeHistory: true, isItemDetail: true, hasValidManageToken: hasValidManageToken));
     }
 
     [HttpGet("{id:int}/matches")]
@@ -130,6 +135,7 @@ public class ItemsController : ControllerBase
             return BadRequest(new { error });
         }
 
+        var plaintext = ManageToken.Create(out var hash);
         var item = new Item
         {
             Title = dto.Title!.Trim(),
@@ -140,17 +146,25 @@ public class ItemsController : ControllerBase
             PhotoUrl = NormalizeOptional(dto.PhotoUrl),
             Kind = kind!,
             Status = status ?? ItemRules.StatusOpen,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            ManageTokenHash = hash
         };
 
         _db.Items.Add(item);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return CreatedAtAction(nameof(GetItem), new { id = item.Id }, ItemMapper.ToResponse(item, includeHistory: true));
+        return CreatedAtAction(
+            nameof(GetItem),
+            new { id = item.Id },
+            ItemMapper.ToResponse(item, includeHistory: true, manageToken: plaintext));
     }
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<ItemResponse>> UpdateItem(int id, [FromBody] ItemWriteDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ItemResponse>> UpdateItem(
+        int id,
+        [FromBody] ItemWriteDto dto,
+        [FromHeader(Name = ManageToken.HeaderName)] string? manageToken,
+        CancellationToken cancellationToken)
     {
         var item = await _db.Items
             .Include(i => i.StatusHistory)
@@ -158,6 +172,11 @@ public class ItemsController : ControllerBase
         if (item is null)
         {
             return NotFound();
+        }
+
+        if (ForbidIfInvalidManageToken(item, manageToken) is { } forbidden)
+        {
+            return forbidden;
         }
 
         if (!TryValidateWrite(dto, out var error, out var kind, out var status, out var location, out var category))
@@ -179,7 +198,11 @@ public class ItemsController : ControllerBase
     }
 
     [HttpPatch("{id:int}/status")]
-    public async Task<ActionResult<ItemResponse>> UpdateStatus(int id, [FromBody] StatusUpdateDto dto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ItemResponse>> UpdateStatus(
+        int id,
+        [FromBody] StatusUpdateDto dto,
+        [FromHeader(Name = ManageToken.HeaderName)] string? manageToken,
+        CancellationToken cancellationToken)
     {
         var item = await _db.Items
             .Include(i => i.StatusHistory)
@@ -187,6 +210,11 @@ public class ItemsController : ControllerBase
         if (item is null)
         {
             return NotFound();
+        }
+
+        if (ForbidIfInvalidManageToken(item, manageToken) is { } forbidden)
+        {
+            return forbidden;
         }
 
         if (!ItemRules.TryNormalizeStatus(dto.Status, out var status))
@@ -200,7 +228,10 @@ public class ItemsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteItem(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteItem(
+        int id,
+        [FromHeader(Name = ManageToken.HeaderName)] string? manageToken,
+        CancellationToken cancellationToken)
     {
         var item = await _db.Items.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
         if (item is null)
@@ -208,9 +239,24 @@ public class ItemsController : ControllerBase
             return NotFound();
         }
 
+        if (ForbidIfInvalidManageToken(item, manageToken) is { } forbidden)
+        {
+            return forbidden;
+        }
+
         _db.Items.Remove(item);
         await _db.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    private ObjectResult? ForbidIfInvalidManageToken(Item item, string? presented)
+    {
+        if (ManageToken.Matches(presented, item.ManageTokenHash))
+        {
+            return null;
+        }
+
+        return StatusCode(StatusCodes.Status403Forbidden, new { error = ManageToken.RequiredError });
     }
 
     private static void ApplyStatusChange(Item item, string status)

@@ -19,5 +19,8 @@ public class ItemResponse
     public DateTime CreatedAt { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ManageToken { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<StatusHistoryDto>? StatusHistory { get; set; }
 }

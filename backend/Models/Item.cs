@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace KampusKayipEsya.Api.Models;
 
 public class Item
@@ -12,5 +14,9 @@ public class Item
     public string Kind { get; set; } = ItemRules.KindLost;
     public string Status { get; set; } = ItemRules.StatusOpen;
     public DateTime CreatedAt { get; set; }
+
+    [JsonIgnore]
+    public byte[]? ManageTokenHash { get; set; }
+
     public ICollection<StatusHistory> StatusHistory { get; set; } = new List<StatusHistory>();
 }
