@@ -22,9 +22,9 @@ Uygulama `http://localhost:4200` adresinde açılır.
 
 Geliştirme ortamı tabanı: `http://localhost:5080/api` (`src/environments/environment.ts`).
 
-Backend’in `http://localhost:5080` üzerinde ayakta olması gerekir. CORS `http://localhost:4200` için açıktır.
+Backend `http://localhost:5080` üzerinde ayakta olmalıdır. CORS `http://localhost:4200` için açıktır.
 
-`GET /api/locations` ve `GET /api/items/{id}/matches` yoksa arayüz yumuşak düşer (sabit konum listesi ve istemci eşleşmesi).
+Gerçek uçlar: `GET /api/locations`, `GET /api/categories`, `GET /api/items/{id}/matches`, `GET /api/items?q=&kind=&category=&location=&status=`. Bu çağrılar başarısız olursa arayüz sabit katalog / istemci eşleşmesine düşer.
 
 ## Ekranlar
 

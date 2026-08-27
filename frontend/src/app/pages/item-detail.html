@@ -95,11 +95,14 @@
             <ol class="history">
               @for (event of item.statusHistory; track $index) {
                 <li>
-                  <strong>{{ statusLabels[event.status] }}</strong>
-                  <span>{{ event.at ? formatDate(event.at) : 'Tarih yok' }}</span>
-                  @if (event.note) {
-                    <small>{{ event.note }}</small>
-                  }
+                  <strong>
+                    @if (event.from) {
+                      {{ statusLabels[event.from] }} → {{ statusLabels[event.to] }}
+                    } @else {
+                      {{ statusLabels[event.to] }}
+                    }
+                  </strong>
+                  <span>{{ event.changedAt ? formatDate(event.changedAt) : 'Tarih yok' }}</span>
                 </li>
               }
             </ol>

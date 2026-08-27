@@ -2,9 +2,9 @@ export type ItemKind = 'lost' | 'found';
 export type ItemStatus = 'open' | 'claimed' | 'closed';
 
 export interface StatusEvent {
-  status: ItemStatus;
-  at: string;
-  note?: string;
+  from: ItemStatus | null;
+  to: ItemStatus;
+  changedAt: string;
 }
 
 export interface Item {

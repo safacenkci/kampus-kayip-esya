@@ -4,7 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ItemCard } from '../components/item-card';
-import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS, mergeCatalog } from '../models/catalog';
+import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS } from '../models/catalog';
 import {
   Item,
   ItemQuery,
@@ -105,7 +105,6 @@ export class ItemList implements OnInit {
     this.api.list(query).subscribe({
       next: (items) => {
         this.items.set(items);
-        this.enrichCatalog(items);
         this.loading.set(false);
       },
       error: (err: Error) => {
@@ -118,15 +117,10 @@ export class ItemList implements OnInit {
 
   private loadCatalog(): void {
     this.api.categories().subscribe({
-      next: (categories) => this.categories.update((current) => mergeCatalog(categories, current)),
+      next: (categories) => this.categories.set(categories),
     });
     this.api.locations().subscribe({
-      next: (locations) => this.locations.update((current) => mergeCatalog(locations, current)),
+      next: (locations) => this.locations.set(locations),
     });
-  }
-
-  private enrichCatalog(items: Item[]): void {
-    this.categories.update((current) => mergeCatalog(current, items.map((item) => item.category)));
-    this.locations.update((current) => mergeCatalog(current, items.map((item) => item.location)));
   }
 }

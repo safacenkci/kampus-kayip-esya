@@ -1,7 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { ItemCard } from '../components/item-card';
 import { KindBadge, StatusBadge } from '../components/badges';
 import {
@@ -87,16 +85,9 @@ export class ItemDetail implements OnInit {
 
     this.api.updateStatus(current.id, status).subscribe({
       next: (updated) => {
-        const merged = { ...current, ...updated, status };
-        if (merged.statusHistory === current.statusHistory) {
-          merged.statusHistory = [
-            ...current.statusHistory,
-            { status, at: new Date().toISOString(), note: STATUS_LABELS[status] },
-          ];
-        }
-        this.item.set(merged);
+        this.item.set({ ...current, ...updated });
         this.actionBusy.set(false);
-        this.loadMatches(merged);
+        this.loadMatches(this.item()!);
       },
       error: (err: Error) => {
         this.actionError.set(err.message);
@@ -143,7 +134,7 @@ export class ItemDetail implements OnInit {
   }
 
   private loadMatches(item: Item): void {
-    this.api.matches(item).pipe(catchError(() => of([] as Item[]))).subscribe({
+    this.api.matches(item).subscribe({
       next: (matches) => {
         this.matches.set(matches);
         this.matchesUnavailable.set(false);

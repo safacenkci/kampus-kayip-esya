@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS, mergeCatalog } from '../models/catalog';
+import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS } from '../models/catalog';
 import {
   Item,
   ItemPayload,
@@ -27,10 +27,7 @@ export class ItemService {
     }
 
     return this.http.get<unknown>(`${this.base}/items`, { params }).pipe(
-      map((body) => {
-        const items = this.normalizeItems(body);
-        return this.applyClientFilters(items, query);
-      }),
+      map((body) => this.normalizeItems(body)),
       catchError((err) => throwError(() => this.toAppError(err, 'İlanlar yüklenemedi.'))),
     );
   }
@@ -80,14 +77,14 @@ export class ItemService {
 
   categories(): Observable<string[]> {
     return this.http.get<unknown>(`${this.base}/categories`).pipe(
-      map((body) => mergeCatalog(FALLBACK_CATEGORIES, this.normalizeStringList(body))),
+      map((body) => this.catalogOrFallback(body, FALLBACK_CATEGORIES)),
       catchError(() => of([...FALLBACK_CATEGORIES])),
     );
   }
 
   locations(): Observable<string[]> {
     return this.http.get<unknown>(`${this.base}/locations`).pipe(
-      map((body) => mergeCatalog(FALLBACK_LOCATIONS, this.normalizeStringList(body))),
+      map((body) => this.catalogOrFallback(body, FALLBACK_LOCATIONS)),
       catchError(() => of([...FALLBACK_LOCATIONS])),
     );
   }
@@ -151,22 +148,9 @@ export class ItemService {
     );
   }
 
-  private applyClientFilters(items: Item[], query: ItemQuery): Item[] {
-    return items.filter((item) => {
-      if (query.kind && item.kind !== query.kind) {
-        return false;
-      }
-      if (query.status && item.status !== query.status) {
-        return false;
-      }
-      if (query.category && !sameCampusField(item.category, query.category)) {
-        return false;
-      }
-      if (query.location && !sameCampusField(item.location, query.location)) {
-        return false;
-      }
-      return true;
-    });
+  private catalogOrFallback(body: unknown, fallback: readonly string[]): string[] {
+    const list = this.normalizeStringList(body);
+    return list.length ? list : [...fallback];
   }
 
   private normalizeItems(body: unknown): Item[] {
@@ -178,7 +162,7 @@ export class ItemService {
     const source = this.unwrapObject(body);
     const status = this.normalizeStatus(source['status'], fallback.status);
     const createdAt = String(source['createdAt'] ?? source['created_at'] ?? fallback.createdAt ?? '');
-    const item: Item = {
+    return {
       id: Number(source['id'] ?? fallback.id ?? 0),
       title: String(source['title'] ?? fallback.title ?? ''),
       description: String(source['description'] ?? fallback.description ?? ''),
@@ -189,34 +173,21 @@ export class ItemService {
       kind: source['kind'] === 'found' || fallback.kind === 'found' ? 'found' : 'lost',
       status,
       createdAt,
-      statusHistory: [],
+      statusHistory: this.normalizeStatusHistory(source, fallback.statusHistory),
     };
-    item.statusHistory = this.normalizeStatusHistory(source, item, fallback.statusHistory);
-    return item;
   }
 
   private normalizeStatusHistory(
     source: Record<string, unknown>,
-    item: Item,
     fallback?: StatusEvent[],
   ): StatusEvent[] {
-    const raw = source['statusHistory'] ?? source['StatusHistory'] ?? fallback;
-    if (Array.isArray(raw) && raw.length) {
+    const raw = source['statusHistory'] ?? source['StatusHistory'];
+    if (Array.isArray(raw)) {
       return raw
         .map((entry) => this.normalizeStatusEvent(entry))
         .filter((event): event is StatusEvent => event !== null);
     }
-
-    const events: StatusEvent[] = [{ status: 'open', at: item.createdAt, note: 'İlan açıldı' }];
-    if (item.status !== 'open') {
-      const at = String(source['updatedAt'] ?? source['statusChangedAt'] ?? source['updated_at'] ?? '');
-      events.push({
-        status: item.status,
-        at,
-        note: item.status === 'claimed' ? 'Sahiplenildi' : 'Kapatıldı',
-      });
-    }
-    return events;
+    return fallback ? [...fallback] : [];
   }
 
   private normalizeStatusEvent(entry: unknown): StatusEvent | null {
@@ -224,11 +195,14 @@ export class ItemService {
       return null;
     }
     const obj = entry as Record<string, unknown>;
-    const status = this.normalizeStatus(obj['status'] ?? obj['to'] ?? obj['value']);
+    const to = this.normalizeStatus(obj['to'] ?? obj['status'] ?? obj['toStatus']);
+    const fromRaw = obj['from'] ?? obj['fromStatus'];
+    const from =
+      fromRaw === 'open' || fromRaw === 'claimed' || fromRaw === 'closed' ? fromRaw : null;
     return {
-      status,
-      at: String(obj['at'] ?? obj['changedAt'] ?? obj['createdAt'] ?? obj['timestamp'] ?? ''),
-      note: this.optionalString(obj['note'] ?? obj['message']) ?? undefined,
+      from,
+      to,
+      changedAt: String(obj['changedAt'] ?? obj['at'] ?? obj['createdAt'] ?? ''),
     };
   }
 
