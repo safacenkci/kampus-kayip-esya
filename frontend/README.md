@@ -1,6 +1,6 @@
 # Kampüs Kayıp-Eşya — Frontend
 
-Angular arayüz. API sözleşmesi kök `README.md` dosyasındadır.
+Aksaray Üniversitesi kampüs panosu. Angular arayüz. API sözleşmesi kök `README.md` dosyasındadır.
 
 ## Çalıştırma
 
@@ -24,11 +24,14 @@ Geliştirme ortamı tabanı: `http://localhost:5080/api` (`src/environments/envi
 
 Backend’in `http://localhost:5080` üzerinde ayakta olması gerekir. CORS `http://localhost:4200` için açıktır.
 
+`GET /api/locations` ve `GET /api/items/{id}/matches` yoksa arayüz yumuşak düşer (sabit konum listesi ve istemci eşleşmesi).
+
 ## Ekranlar
 
-- `/` — ilan listesi, `q` / tür / durum / kategori filtreleri
-- `/yeni` — yeni ilan
-- `/:id` — detay, durum değiştirme (`PATCH`) ve silme
-- `/:id/duzenle` — düzenleme
+- `/` — kart listesi, arama, tür/kategori/konum/durum filtreleri, boş durum
+- `/kaybettim` — kayıp ilanı sihirbazı (tür seçimi yok)
+- `/buldum` — bulunan ilanı sihirbazı (tür seçimi yok)
+- `/:id` — detay, durum (açık → sahiplenildi → kapandı), durum geçmişi, eşleşen ilanlar
+- `/:id/duzenle` — kayıp veya bulunan akışına göre düzenleme
 
-Fotoğraf alanı düz metin URL’dir; dosya yükleme yoktur.
+İletişim, durum `claimed` veya `closed` olana kadar gösterilmez. Fotoğraf alanı düz metin URL’dir; dosya yükleme yoktur.

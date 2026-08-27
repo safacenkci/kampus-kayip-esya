@@ -41,10 +41,18 @@
           <div>
             <dt>İletişim</dt>
             <dd>
-              @if (contactHref(item.contact); as href) {
-                <a [href]="href">{{ item.contact }}</a>
+              @if (contactVisible(item.status)) {
+                @if (item.contact) {
+                  @if (contactHref(item.contact); as href) {
+                    <a [href]="href">{{ item.contact }}</a>
+                  } @else {
+                    {{ item.contact }}
+                  }
+                } @else {
+                  <span class="muted">İletişim kaydı yok.</span>
+                }
               } @else {
-                {{ item.contact }}
+                <span class="hidden-contact">İlan sahiplenilene kadar gizli</span>
               }
             </dd>
           </div>
@@ -54,7 +62,17 @@
         <p class="description">{{ item.description }}</p>
 
         <section class="status-box">
-          <h2>Durumu değiştir</h2>
+          <h2>Durum</h2>
+          <ol class="status-track" aria-label="Durum adımları">
+            @for (status of statusOptions; track status; let i = $index) {
+              <li
+                [class.is-current]="item.status === status"
+                [class.is-done]="statusIndex(item.status) > i"
+              >
+                {{ statusLabels[status] }}
+              </li>
+            }
+          </ol>
           <div class="status-actions">
             @for (status of statusOptions; track status) {
               <button
@@ -69,6 +87,25 @@
               </button>
             }
           </div>
+        </section>
+
+        <section class="history-box">
+          <h2>Durum geçmişi</h2>
+          @if (item.statusHistory.length) {
+            <ol class="history">
+              @for (event of item.statusHistory; track $index) {
+                <li>
+                  <strong>{{ statusLabels[event.status] }}</strong>
+                  <span>{{ event.at ? formatDate(event.at) : 'Tarih yok' }}</span>
+                  @if (event.note) {
+                    <small>{{ event.note }}</small>
+                  }
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="muted">Durum geçmişi henüz yok.</p>
+          }
         </section>
 
         @if (actionError()) {
@@ -91,5 +128,28 @@
         </div>
       </div>
     </div>
+
+    <section class="matches" aria-label="Eşleşen ilanlar">
+      <h2>Eşleşen ilanlar</h2>
+      <p class="muted">
+        Aynı kategori ve konumda, karşıt türde ve açık ilanlar.
+        @if (item.kind === 'lost') {
+          Kaybettiğiniz eşyaya benzer bulunan kayıtlar.
+        } @else {
+          Bulduğunuz eşyaya benzer kayıp kayıtlar.
+        }
+      </p>
+      @if (matchesUnavailable()) {
+        <p class="muted">Eşleşme listesi şu an alınamadı.</p>
+      } @else if (matches().length === 0) {
+        <div class="empty-matches">Açık eşleşen ilan yok.</div>
+      } @else {
+        <div class="match-grid">
+          @for (match of matches(); track match.id) {
+            <app-item-card [item]="match" />
+          }
+        </div>
+      }
+    </section>
   </article>
 }

@@ -1,0 +1,9 @@
+<section class="story story-lost">
+  <a routerLink="/" class="back">← İlanlara dön</a>
+  <div class="story-hero">
+    <p class="eyebrow">Aksaray Üniversitesi · Kaybettim</p>
+    <h1>{{ editId() ? copy.editTitle : copy.title }}</h1>
+    <p class="lede">{{ editId() ? copy.editLede : copy.lede }}</p>
+  </div>
+  <app-notice-wizard kind="lost" [editId]="editId()" />
+</section>

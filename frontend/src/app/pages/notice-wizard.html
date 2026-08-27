@@ -1,0 +1,155 @@
+@if (loading()) {
+  <div class="panel skeleton" [attr.data-kind]="kind()"></div>
+} @else {
+  <form class="wizard" [attr.data-kind]="kind()" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <ol class="steps" aria-label="Adımlar">
+      @for (stepCopy of copy().steps; track stepCopy.title; let i = $index) {
+        <li>
+          <button
+            type="button"
+            class="step"
+            [class.is-current]="step() === i + 1"
+            [class.is-done]="step() > i + 1"
+            (click)="goTo(i + 1)"
+          >
+            <span class="step-index">{{ i + 1 }}</span>
+            <span>
+              <strong>{{ stepCopy.title }}</strong>
+              <small>{{ stepCopy.hint }}</small>
+            </span>
+          </button>
+        </li>
+      }
+    </ol>
+
+    @if (error()) {
+      <div class="banner banner-error" role="alert">{{ error() }}</div>
+    }
+
+    @if (step() === 1) {
+      <fieldset class="panel">
+        <legend>{{ copy().steps[0].title }}</legend>
+        <p class="hint">{{ copy().steps[0].hint }}</p>
+
+        <label>
+          {{ copy().titleLabel }}
+          <input type="text" formControlName="title" [placeholder]="copy().titlePlaceholder" />
+          @if (invalid('title')) {
+            <span class="hint-error">Başlık en az 2 karakter olmalı.</span>
+          }
+        </label>
+
+        <label>
+          {{ copy().categoryLabel }}
+          <select formControlName="category">
+            <option value="" disabled>Kategori seçin</option>
+            @for (name of categories(); track name) {
+              <option [value]="name">{{ name }}</option>
+            }
+          </select>
+          @if (invalid('category')) {
+            <span class="hint-error">Kategori seçin.</span>
+          }
+        </label>
+
+        <label>
+          {{ copy().descriptionLabel }}
+          <textarea rows="4" formControlName="description" [placeholder]="copy().descriptionPlaceholder"></textarea>
+          @if (invalid('description')) {
+            <span class="hint-error">Açıklama gerekli.</span>
+          }
+        </label>
+
+        <label>
+          {{ copy().photoLabel }}
+          <input type="text" formControlName="photoUrl" placeholder="https://..." />
+          <span class="hint">{{ copy().photoHint }}</span>
+        </label>
+      </fieldset>
+    }
+
+    @if (step() === 2) {
+      <fieldset class="panel">
+        <legend>{{ copy().steps[1].title }}</legend>
+        <p class="hint">{{ copy().locationHint }}</p>
+
+        <label>
+          {{ copy().locationLabel }}
+          <select formControlName="location">
+            <option value="" disabled>Konum seçin</option>
+            @for (name of locations(); track name) {
+              <option [value]="name">{{ name }}</option>
+            }
+          </select>
+          @if (invalid('location')) {
+            <span class="hint-error">Kampüs konumunu seçin.</span>
+          }
+        </label>
+
+        @if (kind() === 'lost') {
+          <aside class="callout">
+            Kayıp ilanı, seçtiğiniz konumdaki açık <strong>bulunan</strong> ilanlarla eşleştirilir.
+          </aside>
+        } @else {
+          <aside class="callout">
+            Eşyayı güvenlik, danışma veya yemekhane kasasına bıraktıysanız açıklamada belirtin.
+            Bu konumdaki açık <strong>kayıp</strong> ilanlar detayda listelenir.
+          </aside>
+        }
+      </fieldset>
+    }
+
+    @if (step() === 3) {
+      <fieldset class="panel">
+        <legend>{{ copy().steps[2].title }}</legend>
+        <p class="hint">{{ copy().contactHint }}</p>
+
+        <label>
+          {{ copy().contactLabel }}
+          <input type="text" formControlName="contact" [placeholder]="copy().contactPlaceholder" />
+          @if (invalid('contact')) {
+            <span class="hint-error">İletişim bilgisi gerekli.</span>
+          }
+        </label>
+
+        <div class="review">
+          <h2>Özet</h2>
+          <dl>
+            <div>
+              <dt>Akış</dt>
+              <dd>{{ copy().reviewKind }}</dd>
+            </div>
+            <div>
+              <dt>Başlık</dt>
+              <dd>{{ form.controls.title.value || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Kategori</dt>
+              <dd>{{ form.controls.category.value || '—' }}</dd>
+            </div>
+            <div>
+              <dt>Konum</dt>
+              <dd>{{ form.controls.location.value || '—' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </fieldset>
+    }
+
+    <div class="row-actions">
+      @if (step() > 1) {
+        <button type="button" class="btn btn-ghost" (click)="back()">Geri</button>
+      } @else {
+        <a routerLink="/" class="btn btn-ghost">Vazgeç</a>
+      }
+
+      @if (step() < 3) {
+        <button type="button" class="btn btn-primary" (click)="next()">Devam</button>
+      } @else {
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          {{ saving() ? copy().ctaBusy : editId() ? 'Değişiklikleri kaydet' : copy().cta }}
+        </button>
+      }
+    </div>
+  </form>
+}
