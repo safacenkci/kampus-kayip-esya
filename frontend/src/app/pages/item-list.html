@@ -1,108 +1,214 @@
 <section class="hero">
-  <div>
-    <p class="eyebrow">Aksaray Üniversitesi kampüs panosu</p>
-    <h1>Kaybettim veya buldum</h1>
-    <p class="lede">
-      Kayıp ve bulunan eşyaları arayın, filtreleyin. Kaybettim ve Buldum ayrı akışlardır; iletişim yalnızca sahiplenilince görünür.
-    </p>
-  </div>
+  <p class="eyebrow">Aksaray Üniversitesi · kampüs panosu</p>
+  <h1>Kampüste kaybolan,<br />kampüste bulunur.</h1>
+  <p class="lede">
+    Kaybettiğin eşyayı bildir ya da bulduğunu panoya as. Aynı yerde ve aynı kategorideki karşıt
+    ilanlar otomatik eşleşir. İletişim bilgin, ilan sahiplenilene kadar kimseye görünmez.
+  </p>
 </section>
 
 <section class="launch" aria-label="İlan aç">
   <a routerLink="/kaybettim" class="launch-card launch-lost">
-    <span class="eyebrow">Kaybettim</span>
-    <strong>Eşyamı kaybettim</strong>
-    <span>Kampüste kaybettiğiniz eşyayı bildirin. İletişim, sahiplenilene kadar gizli kalır.</span>
+    <span class="launch-icon" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m16.2 16.2 4.3 4.3M8.8 8.8l4.4 4.4M13.2 8.8l-4.4 4.4" />
+      </svg>
+    </span>
+    <span class="launch-text">
+      <strong>Bir şeyimi kaybettim</strong>
+      <span>Ne kaybettiğini yaz, bulunan ilanlarla eşleştirelim.</span>
+    </span>
+    <span class="launch-go" aria-hidden="true">→</span>
   </a>
+
   <a routerLink="/buldum" class="launch-card launch-found">
-    <span class="eyebrow">Buldum</span>
-    <strong>Eşya buldum</strong>
-    <span>Bulduğunuz eşyayı kaydedin. Aynı konum ve kategorideki kayıp ilanlar önerilir.</span>
+    <span class="launch-icon" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+        <path d="m9.4 10.2 1.9 1.9 3.4-3.6" />
+      </svg>
+    </span>
+    <span class="launch-text">
+      <strong>Bir şey buldum</strong>
+      <span>Bulduğunu panoya as, sahibi sana ulaşsın.</span>
+    </span>
+    <span class="launch-go" aria-hidden="true">→</span>
   </a>
 </section>
 
-<section class="filters" aria-label="Arama ve filtreler">
-  <label class="search">
-    <span class="sr-only">Metin ara</span>
-    <input type="search" [formControl]="searchControl" placeholder="Başlık, yer veya açıklama ara…" />
-  </label>
-
-  <div class="filter-row">
-    <label>
-      Tür
-      <select [value]="kind()" (change)="setKind($event)">
-        <option value="">Tümü</option>
-        @for (option of kindOptions; track option) {
-          <option [value]="option">{{ kindLabels[option] }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Kategori
-      <select [value]="category()" (change)="setCategory($event)">
-        <option value="">Tümü</option>
-        @for (name of categories(); track name) {
-          <option [value]="name">{{ name }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Konum
-      <select [value]="location()" (change)="setLocation($event)">
-        <option value="">Tümü</option>
-        @for (name of locations(); track name) {
-          <option [value]="name">{{ name }}</option>
-        }
-      </select>
-    </label>
-
-    <label>
-      Durum
-      <select [value]="status()" (change)="setStatus($event)">
-        <option value="">Tümü</option>
-        @for (option of statusOptions; track option) {
-          <option [value]="option">{{ statusLabels[option] }}</option>
-        }
-      </select>
-    </label>
+<section class="finder" aria-label="Arama ve süzgeçler">
+  <div class="search">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.9"
+      stroke-linecap="round"
+      aria-hidden="true"
+      class="search-icon"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m16.2 16.2 4.3 4.3" />
+    </svg>
+    <label class="sr-only" for="arama">İlanlarda ara</label>
+    <input
+      id="arama"
+      type="search"
+      [formControl]="searchControl"
+      placeholder="Ne arıyorsun? Kart, kulaklık, anahtar…"
+      autocomplete="off"
+    />
   </div>
 
-  @if (hasFilters) {
-    <button type="button" class="btn btn-ghost" (click)="clearFilters()">Filtreleri temizle</button>
-  }
+  <div class="filter-line">
+    <span class="filter-label">Tür</span>
+    <div class="scroller">
+      @for (option of kindOptions; track option) {
+        <button
+          type="button"
+          class="pill"
+          [class.pill-lost]="option === 'lost'"
+          [class.pill-found]="option === 'found'"
+          [attr.aria-pressed]="kind() === option"
+          (click)="toggleKind(option)"
+        >
+          {{ kindLabels[option] }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="filter-line">
+    <span class="filter-label">Kategori</span>
+    <div class="scroller">
+      @for (name of categories(); track name) {
+        <button
+          type="button"
+          class="pill"
+          [attr.aria-pressed]="category() === name"
+          (click)="toggleCategory(name)"
+        >
+          <app-category-icon [category]="name" />
+          {{ name }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="filter-line">
+    <span class="filter-label">Konum</span>
+    <div class="scroller">
+      @for (name of locations(); track name) {
+        <button
+          type="button"
+          class="pill"
+          [attr.aria-pressed]="location() === name"
+          (click)="toggleLocation(name)"
+        >
+          {{ name }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="filter-line">
+    <span class="filter-label">Durum</span>
+    <div class="scroller">
+      @for (option of statusOptions; track option) {
+        <button
+          type="button"
+          class="pill"
+          [attr.aria-pressed]="status() === option"
+          (click)="toggleStatus(option)"
+        >
+          {{ statusLabels[option] }}
+        </button>
+      }
+    </div>
+  </div>
 </section>
+
+<div class="result-bar">
+  <p class="result-count">
+    @if (loading()) {
+      <span class="muted">İlanlar yükleniyor…</span>
+    } @else {
+      <strong>{{ counts().total }}</strong> ilan
+      @if (counts().total > 0) {
+        <span class="tally">
+          <span class="tally-lost">{{ counts().lost }} kayıp</span>
+          <span class="tally-found">{{ counts().found }} bulunan</span>
+        </span>
+      }
+    }
+  </p>
+
+  @if (hasFilters()) {
+    <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">
+      {{ activeFilterCount() }} süzgeci temizle
+    </button>
+  }
+</div>
 
 @if (error()) {
   <div class="banner banner-error" role="alert">
     <p>{{ error() }}</p>
-    <button type="button" class="btn btn-ghost" (click)="loadItems()">Yeniden dene</button>
+    <button type="button" class="btn btn-ghost btn-sm" (click)="loadItems()">Yeniden dene</button>
   </div>
 }
 
 @if (loading()) {
-  <div class="grid">
+  <div class="grid" aria-hidden="true">
     @for (n of [1, 2, 3, 4, 5, 6]; track n) {
-      <div class="skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
     }
   </div>
 } @else if (!error() && items().length === 0) {
   <div class="empty">
-    @if (hasFilters) {
-      <h2>Sonuç bulunamadı</h2>
-      <p>Bu arama ve filtrelere uygun ilan yok. Filtreleri gevşetmeyi deneyin.</p>
-      <button type="button" class="btn btn-ghost" (click)="clearFilters()">Filtreleri temizle</button>
+    <span class="empty-mark" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m16.2 16.2 4.3 4.3M8.5 11h5" />
+      </svg>
+    </span>
+    @if (hasFilters()) {
+      <h2>Buna uyan ilan yok</h2>
+      <p>Süzgeçleri biraz gevşetmeyi dene; belki ilan başka bir konuma yazılmıştır.</p>
+      <button type="button" class="btn btn-primary" (click)="clearFilters()">
+        Süzgeçleri temizle
+      </button>
     } @else {
-      <h2>Henüz ilan yok</h2>
-      <p>Kaybettim veya Buldum akışından ilk ilanı ekleyin.</p>
+      <h2>Pano şu an boş</h2>
+      <p>İlk ilanı sen aç. Kaybettiğin bir şey var mı, yoksa bir şey mi buldun?</p>
       <div class="empty-actions">
         <a routerLink="/kaybettim" class="btn btn-lost">Kaybettim</a>
         <a routerLink="/buldum" class="btn btn-found">Buldum</a>
       </div>
     }
   </div>
-} @else if (items().length) {
+} @else {
   <div class="grid">
     @for (item of items(); track item.id) {
       <app-item-card [item]="item" />

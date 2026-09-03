@@ -1,95 +1,193 @@
 @if (loading()) {
-  <div class="panel skeleton-detail"></div>
+  <div class="detail-grid">
+    <div class="skeleton skeleton-media"></div>
+    <div class="skeleton skeleton-panel"></div>
+  </div>
 } @else if (error()) {
   <div class="banner banner-error" role="alert">
     <p>{{ error() }}</p>
     <div class="row-actions">
-      <button type="button" class="btn btn-ghost" (click)="load()">Yeniden dene</button>
-      <a routerLink="/" class="btn btn-ghost">İlanlara dön</a>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="load()">Yeniden dene</button>
+      <a routerLink="/" class="btn btn-ghost btn-sm">Panoya dön</a>
     </div>
   </div>
 } @else if (item(); as item) {
-  <article class="detail">
-    <a routerLink="/" class="back">← İlanlara dön</a>
+  <article class="detail" [attr.data-kind]="item.kind">
+    <a routerLink="/" class="back">
+      <span aria-hidden="true">←</span>
+      Panoya dön
+    </a>
 
     <div class="detail-grid">
-      <div class="media">
-        @if (item.photoUrl && !photoBroken()) {
-          <img [src]="item.photoUrl" [alt]="item.title" (error)="onPhotoError()" />
-        } @else {
-          <div class="media-empty">Görsel yok</div>
-        }
+      <div class="media-col">
+        <div class="media">
+          @if (item.photoUrl && !photoBroken()) {
+            <img [src]="item.photoUrl" [alt]="item.title" (error)="onPhotoError()" />
+          } @else {
+            <div class="media-empty">
+              <app-category-icon [category]="item.category" />
+              <span>Bu ilanda görsel yok</span>
+            </div>
+          }
+        </div>
       </div>
 
-      <div class="panel">
+      <div class="info-col">
         <div class="flags">
           <app-kind-badge [kind]="item.kind" />
           <app-status-badge [status]="item.status" />
+          <span class="posted mono">{{ relative(item.createdAt) }}</span>
         </div>
-        <h1>{{ item.title }}</h1>
-        <p class="when">{{ formatDate(item.createdAt) }}</p>
 
-        <dl class="facts">
-          <div>
-            <dt>Konum</dt>
-            <dd>{{ item.location }}</dd>
+        <h1>{{ item.title }}</h1>
+
+        <div class="facts">
+          <div class="fact">
+            <span class="fact-icon" aria-hidden="true">
+              <app-category-icon [category]="item.category" />
+            </span>
+            <span class="fact-text">
+              <small>Kategori</small>
+              <strong>{{ item.category }}</strong>
+            </span>
           </div>
-          <div>
-            <dt>Kategori</dt>
-            <dd>{{ item.category }}</dd>
+          <div class="fact">
+            <span class="fact-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+                <circle cx="12" cy="10" r="2.4" />
+              </svg>
+            </span>
+            <span class="fact-text">
+              <small>Konum</small>
+              <strong>{{ item.location }}</strong>
+            </span>
           </div>
-          <div>
-            <dt>İletişim</dt>
-            <dd>
-              @if (contactVisible(item.status)) {
-                @if (item.contact) {
-                  @if (contactHref(item.contact); as href) {
-                    <a [href]="href">{{ item.contact }}</a>
-                  } @else {
-                    {{ item.contact }}
-                  }
+          <div class="fact">
+            <span class="fact-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.2V12l3 1.8" />
+              </svg>
+            </span>
+            <span class="fact-text">
+              <small>Yayınlandı</small>
+              <strong>{{ formatDate(item.createdAt) }}</strong>
+            </span>
+          </div>
+        </div>
+
+        @if (item.description) {
+          <section class="block">
+            <h2>Açıklama</h2>
+            <p class="description">{{ item.description }}</p>
+          </section>
+        }
+
+        <!-- İletişim: açık ilanda kilitli görünür -->
+        <section class="contact-card" [class.is-locked]="!contactVisible(item.status)">
+          @if (contactVisible(item.status)) {
+            <span class="contact-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="2.5" y="4.5" width="19" height="15" rx="2.6" />
+                <path d="m3.5 7 8.5 6 8.5-6" />
+              </svg>
+            </span>
+            <div class="contact-body">
+              <small>İletişim</small>
+              @if (item.contact) {
+                @if (contactHref(item.contact); as href) {
+                  <a [href]="href" class="contact-value">{{ item.contact }}</a>
                 } @else {
-                  <span class="muted">İletişim kaydı yok.</span>
+                  <span class="contact-value">{{ item.contact }}</span>
                 }
               } @else {
-                <span class="hidden-contact">İlan sahiplenilene kadar gizli</span>
+                <span class="contact-value muted">İletişim kaydı yok.</span>
               }
-            </dd>
-          </div>
-        </dl>
+            </div>
+          } @else {
+            <span class="contact-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="4.5" y="10.5" width="15" height="10" rx="2.4" />
+                <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" />
+              </svg>
+            </span>
+            <div class="contact-body">
+              <small>İletişim gizli</small>
+              <span class="contact-value">İlan sahiplenilince açılır</span>
+              <p class="contact-note">
+                Bu eşya senin mi? Aşağıdan durumu <strong>Sahiplenildi</strong> yap; iletişim
+                bilgisi o zaman görünür olur.
+              </p>
+            </div>
+          }
+        </section>
 
-        <h2>Açıklama</h2>
-        <p class="description">{{ item.description }}</p>
-
-        <section class="status-box">
+        <!-- Durum -->
+        <section class="block">
           <h2>Durum</h2>
-          <ol class="status-track" aria-label="Durum adımları">
+          <ol class="track" aria-label="İlan durumu">
             @for (status of statusOptions; track status; let i = $index) {
               <li
                 [class.is-current]="item.status === status"
                 [class.is-done]="statusIndex(item.status) > i"
               >
+                <span class="track-dot" aria-hidden="true"></span>
                 {{ statusLabels[status] }}
               </li>
             }
           </ol>
-          <div class="status-actions">
-            @for (status of statusOptions; track status) {
-              <button
-                type="button"
-                class="btn"
-                [class.btn-primary]="item.status === status"
-                [class.btn-ghost]="item.status !== status"
-                [disabled]="actionBusy() || item.status === status"
-                (click)="changeStatus(status)"
-              >
-                {{ statusLabels[status] }}
-              </button>
-            }
+
+          <!-- Yalnızca geçilebilecek durumlar; mevcut durum zaten yukarıdaki izde görünüyor. -->
+          <div class="status-change">
+            <span class="change-label">Durumu değiştir</span>
+            <div class="row-actions">
+              @for (status of statusOptions; track status) {
+                @if (status !== item.status) {
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    [disabled]="actionBusy()"
+                    (click)="changeStatus(status)"
+                  >
+                    {{ statusLabels[status] }}
+                  </button>
+                }
+              }
+            </div>
           </div>
         </section>
 
-        <section class="history-box">
+        <!-- Geçmiş -->
+        <section class="block">
           <h2>Durum geçmişi</h2>
           @if (item.statusHistory.length) {
             <ol class="history">
@@ -102,12 +200,14 @@
                       {{ statusLabels[event.to] }}
                     }
                   </strong>
-                  <span>{{ event.changedAt ? formatDate(event.changedAt) : 'Tarih yok' }}</span>
+                  <span class="mono muted">
+                    {{ event.changedAt ? formatDate(event.changedAt) : 'Tarih yok' }}
+                  </span>
                 </li>
               }
             </ol>
           } @else {
-            <p class="muted">Durum geçmişi henüz yok.</p>
+            <p class="muted">Henüz durum değişikliği yok.</p>
           }
         </section>
 
@@ -115,37 +215,61 @@
           <div class="banner banner-error" role="alert">{{ actionError() }}</div>
         }
 
-        <div class="row-actions">
-          <a [routerLink]="['/', item.id, 'duzenle']" class="btn btn-ghost">Düzenle</a>
+        <div class="owner-actions">
+          <a [routerLink]="['/', item.id, 'duzenle']" class="btn btn-ghost btn-sm">Düzenle</a>
           @if (!confirmDelete()) {
-            <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="confirmDelete.set(true)">
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              [disabled]="actionBusy()"
+              (click)="confirmDelete.set(true)"
+            >
               Sil
             </button>
           } @else {
             <span class="confirm">
-              Silmek istediğinize emin misiniz?
-              <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="deleteItem()">Evet, sil</button>
-              <button type="button" class="btn btn-ghost" (click)="confirmDelete.set(false)">Vazgeç</button>
+              <span>Bu ilanı silelim mi?</span>
+              <button
+                type="button"
+                class="btn btn-danger btn-sm"
+                [disabled]="actionBusy()"
+                (click)="deleteItem()"
+              >
+                Evet, sil
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="confirmDelete.set(false)">
+                Vazgeç
+              </button>
             </span>
           }
         </div>
       </div>
     </div>
 
+    <!-- Eşleşmeler -->
     <section class="matches" aria-label="Eşleşen ilanlar">
-      <h2>Eşleşen ilanlar</h2>
-      <p class="muted">
-        Aynı kategori ve konumda, karşıt türde ve açık ilanlar.
-        @if (item.kind === 'lost') {
-          Kaybettiğiniz eşyaya benzer bulunan kayıtlar.
-        } @else {
-          Bulduğunuz eşyaya benzer kayıp kayıtlar.
-        }
-      </p>
+      <div class="matches-head">
+        <h2>
+          Olası eşleşmeler
+          @if (matches().length) {
+            <span class="count">{{ matches().length }}</span>
+          }
+        </h2>
+        <p class="muted">
+          @if (item.kind === 'lost') {
+            Aynı yerde ve kategoride bulunmuş, hâlâ açık olan ilanlar.
+          } @else {
+            Aynı yerde ve kategoride kaybedilmiş, hâlâ açık olan ilanlar.
+          }
+        </p>
+      </div>
+
       @if (matchesUnavailable()) {
-        <p class="muted">Eşleşme listesi şu an alınamadı.</p>
+        <div class="matches-empty">Eşleşme listesi şu an alınamadı.</div>
       } @else if (matches().length === 0) {
-        <div class="empty-matches">Açık eşleşen ilan yok.</div>
+        <div class="matches-empty">
+          Şimdilik eşleşme yok. Karşıt ilan açıldığında burada görünecek.
+        </div>
       } @else {
         <div class="match-grid">
           @for (match of matches(); track match.id) {

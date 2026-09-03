@@ -1,30 +1,89 @@
-.story-lost {
+.story {
   display: grid;
-  gap: 1rem;
-}
-
-.story-hero {
-  padding: 1.15rem 1.2rem 1.25rem;
-  border-radius: 22px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--lost) 18%, var(--paper)), var(--paper));
-  border: 1px solid color-mix(in srgb, var(--lost) 28%, var(--line));
+  gap: 1.1rem;
 }
 
 .back {
-  color: var(--lost);
-  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: start;
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: 0.9rem;
   text-decoration: none;
+  transition:
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
-h1 {
-  margin: 0.2rem 0 0.4rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 4vw, 2.3rem);
+.back:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: translateX(-2px);
+}
+
+.story-hero {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: start;
+  padding: 1.35rem 1.4rem 1.5rem;
+  border-radius: var(--r-lg);
+  border: 1.5px solid transparent;
+}
+
+.story-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.65rem;
+  border-radius: var(--r-full);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.story-badge svg {
+  width: 17px;
+  height: 17px;
+}
+
+.story-hero h1 {
+  font-size: clamp(1.7rem, 5vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 
 .lede {
-  margin: 0;
-  max-width: 40rem;
-  color: var(--ink-soft);
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .story-hero {
+    padding: 1.15rem 1.1rem 1.25rem;
+  }
+}
+
+/* Kayıp akışının rengi */
+.story[data-kind='lost'] .story-hero {
+  background: var(--lost-tint);
+  border-color: var(--lost-edge);
+}
+
+.story[data-kind='lost'] .story-badge {
+  background: var(--lost-vivid);
+  color: #fff;
+}
+
+.story[data-kind='lost'] .back:hover {
+  border-color: var(--lost);
+  color: var(--lost);
 }

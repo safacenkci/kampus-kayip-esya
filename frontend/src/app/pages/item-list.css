@@ -1,119 +1,270 @@
+/* --- başlık --- */
 .hero {
-  margin-bottom: 1rem;
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.5rem 0 1.6rem;
 }
 
 .hero h1 {
-  margin: 0.15rem 0 0.4rem;
-  font-family: var(--font-display);
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-size: clamp(2rem, 6.2vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 
 .lede {
-  margin: 0;
-  max-width: 42rem;
-  color: var(--muted);
-  font-size: 1.05rem;
+  max-width: 54ch;
+  color: var(--ink-2);
+  font-size: 1.02rem;
 }
 
+/* --- iki akış kartı --- */
 .launch {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.9rem;
 }
 
 .launch-card {
   display: grid;
-  gap: 0.3rem;
-  padding: 1rem 1.1rem;
-  border-radius: 18px;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--r-lg);
+  border: 1.5px solid transparent;
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--line);
-  background: var(--paper);
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 180ms ease;
+}
+
+.launch-card:hover {
+  transform: translateY(-3px);
   box-shadow: var(--shadow);
 }
 
-.launch-card strong {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-}
-
 .launch-lost {
-  border-color: color-mix(in srgb, var(--lost) 30%, var(--line));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--lost) 12%, white), var(--paper));
+  background: var(--lost-tint);
+  border-color: var(--lost-edge);
 }
 
 .launch-found {
-  border-color: color-mix(in srgb, var(--found) 30%, var(--line));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--found) 12%, white), var(--paper));
+  background: var(--found-tint);
+  border-color: var(--found-edge);
 }
 
-.filters {
+.launch-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  flex: none;
+}
+
+.launch-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.launch-lost .launch-icon {
+  background: var(--lost-vivid);
+  color: #fff;
+}
+
+.launch-found .launch-icon {
+  background: var(--found-vivid);
+  color: #04231e;
+}
+
+.launch-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.launch-text strong {
+  font-family: var(--font-display);
+  font-size: 1.14rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.launch-text span {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+
+.launch-go {
+  font-size: 1.35rem;
+  font-weight: 700;
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.launch-lost .launch-go {
+  color: var(--lost);
+}
+
+.launch-found .launch-go {
+  color: var(--found);
+}
+
+.launch-card:hover .launch-go {
+  transform: translateX(4px);
+}
+
+/* --- arama ve süzgeçler --- */
+.finder {
   display: grid;
   gap: 0.85rem;
-  margin-bottom: 1.4rem;
-  padding: 1rem;
-  background: var(--paper);
+  padding: 1.05rem 1.1rem 1.15rem;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.search {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  pointer-events: none;
 }
 
 .search input {
-  width: 100%;
+  min-height: 54px;
+  padding-left: 3rem;
+  font-size: 1rem;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
 }
 
-.filter-row {
+.search input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+.filter-line {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 4.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.filter-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --- sonuç şeridi --- */
+.result-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 0.9rem;
 }
 
-.filter-row label,
-.search {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.86rem;
-  font-weight: 650;
-  color: var(--ink-soft);
+.result-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+  color: var(--ink-2);
 }
 
+.result-count strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+}
+
+.tally {
+  display: inline-flex;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.tally span {
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--r-full);
+}
+
+.tally-lost {
+  background: var(--lost-tint);
+  color: var(--lost);
+}
+
+.tally-found {
+  background: var(--found-tint);
+  color: var(--found);
+}
+
+/* --- ızgara --- */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
   gap: 1rem;
 }
 
 .skeleton-card {
-  height: 280px;
-  border-radius: 18px;
-  background: linear-gradient(90deg, #e6ddd0 25%, #f4eee4 50%, #e6ddd0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s linear infinite;
+  height: 300px;
+  border-radius: var(--r-lg);
 }
 
-@keyframes shimmer {
-  to {
-    background-position: -200% 0;
-  }
-}
-
+/* --- boş durum --- */
 .empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
   text-align: center;
-  padding: 3rem 1rem;
-  background: var(--paper);
-  border: 1px dashed color-mix(in srgb, var(--pine) 30%, var(--line));
-  border-radius: 18px;
+  padding: 3.4rem 1.25rem;
+  background: var(--surface);
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+}
+
+.empty-mark {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.empty-mark svg {
+  width: 28px;
+  height: 28px;
 }
 
 .empty h2 {
-  margin: 0 0 0.4rem;
-  font-family: var(--font-display);
+  font-size: 1.3rem;
 }
 
 .empty p {
-  margin: 0 0 1rem;
   color: var(--muted);
+  max-width: 42ch;
+  margin-bottom: 0.6rem;
 }
 
 .empty-actions {
@@ -123,16 +274,24 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 860px) {
-  .filter-row,
+/* --- uyarlama --- */
+@media (max-width: 760px) {
   .launch {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  .filter-line {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .hero {
+    padding-bottom: 1.25rem;
   }
 }
 
-@media (max-width: 560px) {
-  .filter-row,
-  .launch {
+@media (max-width: 420px) {
+  .grid {
     grid-template-columns: 1fr;
   }
 }

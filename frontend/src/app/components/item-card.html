@@ -1,22 +1,45 @@
-<a class="card" [routerLink]="['/', item().id]">
-  <div class="card-media" [class.no-photo]="!item().photoUrl">
-    @if (item().photoUrl) {
-      <img [src]="item().photoUrl" [alt]="item().title" loading="lazy" />
+<a class="card" [attr.data-kind]="item().kind" [routerLink]="['/', item().id]">
+  <div class="card-media">
+    @if (item().photoUrl && !photoBroken()) {
+      <img [src]="item().photoUrl" [alt]="item().title" loading="lazy" (error)="onPhotoError()" />
     } @else {
-      <div class="card-placeholder">{{ placeholder(item().kind) }}</div>
+      <div class="card-placeholder" aria-hidden="true">
+        <app-category-icon [category]="item().category" />
+      </div>
     }
+
     <div class="card-flags">
       <app-kind-badge [kind]="item().kind" />
       <app-status-badge [status]="item().status" />
     </div>
   </div>
+
   <div class="card-body">
-    <h2>{{ item().title }}</h2>
-    <p class="meta">
-      <span>{{ item().location }}</span>
-      <span aria-hidden="true">·</span>
-      <span>{{ item().category }}</span>
+    <h3 class="card-title">{{ item().title }}</h3>
+
+    <p class="card-meta">
+      <span class="meta-item">
+        <app-category-icon [category]="item().category" />
+        {{ item().category }}
+      </span>
+      <span class="meta-item">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="meta-icon"
+        >
+          <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+          <circle cx="12" cy="10" r="2.4" />
+        </svg>
+        {{ item().location }}
+      </span>
     </p>
-    <p class="date">{{ formatDate(item().createdAt) }}</p>
+
+    <p class="card-time mono">{{ relative(item().createdAt) }}</p>
   </div>
 </a>

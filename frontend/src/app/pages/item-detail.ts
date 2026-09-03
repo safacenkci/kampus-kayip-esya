@@ -1,20 +1,16 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ItemCard } from '../components/item-card';
+import { CategoryIcon } from '../components/category-icon';
 import { KindBadge, StatusBadge } from '../components/badges';
-import {
-  isContactVisible,
-  Item,
-  ItemStatus,
-  STATUS_LABELS,
-  STATUS_OPTIONS,
-} from '../models/item';
+import { isContactVisible, Item, ItemStatus, STATUS_LABELS, STATUS_OPTIONS } from '../models/item';
 import { ItemService } from '../services/item.service';
-import { formatDateTr } from '../utils/format';
+import { formatDateTr, formatRelativeTr } from '../utils/format';
 
 @Component({
   selector: 'app-item-detail',
-  imports: [RouterLink, KindBadge, StatusBadge, ItemCard],
+  imports: [RouterLink, KindBadge, StatusBadge, ItemCard, CategoryIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './item-detail.html',
   styleUrl: './item-detail.css',
 })
@@ -36,6 +32,7 @@ export class ItemDetail implements OnInit {
   readonly statusOptions = STATUS_OPTIONS;
   readonly statusLabels = STATUS_LABELS;
   readonly formatDate = formatDateTr;
+  readonly relative = formatRelativeTr;
   readonly contactVisible = isContactVisible;
 
   ngOnInit(): void {

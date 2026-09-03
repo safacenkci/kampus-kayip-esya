@@ -1,8 +1,9 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ItemKind, ItemStatus, KIND_LABELS, STATUS_LABELS } from '../models/item';
 
 @Component({
   selector: 'app-kind-badge',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span class="chip" [class]="'chip-' + kind()">{{ labels[kind()] }}</span>`,
 })
 export class KindBadge {
@@ -12,6 +13,7 @@ export class KindBadge {
 
 @Component({
   selector: 'app-status-badge',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span class="chip" [class]="'chip-status-' + status()">{{ labels[status()] }}</span>`,
 })
 export class StatusBadge {

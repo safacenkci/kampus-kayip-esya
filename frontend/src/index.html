@@ -2,11 +2,37 @@
 <html lang="tr">
   <head>
     <meta charset="utf-8" />
-    <title>Aksaray Üniversitesi Kampüs Kayıp-Eşya</title>
+    <title>Kampüs Kayıp-Eşya · Aksaray Üniversitesi</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Aksaray Üniversitesi kampüs kayıp ve bulunan eşya panosu" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Aksaray Üniversitesi kampüsünde bir şey mi kaybettin, yoksa buldun mu? İlanı bırak, eşleşmeni gör."
+    />
+    <meta name="theme-color" content="#f1f2ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e1012" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    />
+
+    <!-- Kayıtlı tema tercihini ilk boyamadan önce uygula: tema atlaması olmasın. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('kke-theme');
+          if (saved === 'dark' || saved === 'light') {
+            document.documentElement.setAttribute('data-theme', saved);
+          }
+        } catch (err) {
+          /* depolama kapalıysa işletim sistemi tercihi geçerli olur */
+        }
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

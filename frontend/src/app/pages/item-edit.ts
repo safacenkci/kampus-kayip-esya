@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ItemService } from '../services/item.service';
 import { BuldumPage } from './buldum';
@@ -7,13 +7,14 @@ import { KaybettimPage } from './kaybettim';
 @Component({
   selector: 'app-item-edit',
   imports: [RouterLink, KaybettimPage, BuldumPage],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (loading()) {
-      <div class="panel-wait"></div>
+      <div class="skeleton panel-wait"></div>
     } @else if (error()) {
       <div class="banner banner-error" role="alert">
         <p>{{ error() }}</p>
-        <a routerLink="/" class="btn btn-ghost">İlanlara dön</a>
+        <a routerLink="/" class="btn btn-ghost btn-sm">Panoya dön</a>
       </div>
     } @else if (kind() === 'found') {
       <app-buldum [editId]="itemId()" />
@@ -23,10 +24,8 @@ import { KaybettimPage } from './kaybettim';
   `,
   styles: `
     .panel-wait {
-      height: 280px;
-      border-radius: 22px;
-      background: var(--paper);
-      border: 1px solid var(--line);
+      height: 320px;
+      border-radius: var(--r-lg);
     }
   `,
 })
@@ -43,7 +42,7 @@ export class ItemEditPage implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!Number.isFinite(id) || id <= 0) {
       this.loading.set(false);
-      this.error.set('Geçersiz ilan.');
+      this.error.set('Bu ilan bulunamadı.');
       return;
     }
 

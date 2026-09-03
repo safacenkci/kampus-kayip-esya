@@ -1,14 +1,19 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { CategoryIcon } from '../components/category-icon';
+import { ItemCard } from '../components/item-card';
 import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS, mergeCatalog } from '../models/catalog';
 import { flowFor } from '../models/flows';
 import { Item, ItemKind, ItemPayload, ItemStatus } from '../models/item';
 import { ItemService } from '../services/item.service';
 
+const TOTAL_STEPS = 3;
+
 @Component({
   selector: 'app-notice-wizard',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, CategoryIcon, ItemCard],
   templateUrl: './notice-wizard.html',
   styleUrl: './notice-wizard.css',
 })
@@ -37,6 +42,44 @@ export class NoticeWizard implements OnInit {
     contact: ['', Validators.required],
     photoUrl: [''],
   });
+
+  readonly totalSteps = TOTAL_STEPS;
+
+  /** İlerleme yüzdesi — üstteki şerit için. */
+  readonly progress = computed(() => Math.round((this.step() / TOTAL_STEPS) * 100));
+
+  private readonly formValue = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
+  });
+
+  /** Form doldukça güncellenen canlı ilan önizlemesi. */
+  readonly preview = computed<Item>(() => {
+    const value = this.formValue();
+    const photo = (value.photoUrl ?? '').trim();
+    return {
+      id: this.editId() ?? 0,
+      title: (value.title ?? '').trim() || 'Başlık henüz yazılmadı',
+      description: (value.description ?? '').trim(),
+      location: value.location ?? '',
+      category: value.category ?? '',
+      contact: (value.contact ?? '').trim(),
+      photoUrl: photo || null,
+      kind: this.kind(),
+      status: this.editId() ? this.existingStatus() : 'open',
+      createdAt: new Date().toISOString(),
+      statusHistory: [],
+    };
+  });
+
+  /** Etiketten seçim: aynı değere tekrar basmak seçimi bırakmaz, alan zorunludur. */
+  pick(field: 'category' | 'location', value: string): void {
+    this.form.controls[field].setValue(value);
+    this.form.controls[field].markAsTouched();
+  }
+
+  isPicked(field: 'category' | 'location', value: string): boolean {
+    return this.form.controls[field].value === value;
+  }
 
   ngOnInit(): void {
     const copy = this.copy();

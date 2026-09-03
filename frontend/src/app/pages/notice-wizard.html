@@ -1,149 +1,219 @@
 @if (loading()) {
-  <div class="panel skeleton" [attr.data-kind]="kind()"></div>
+  <div class="skeleton wizard-skeleton"></div>
 } @else {
-  <form class="wizard" [attr.data-kind]="kind()" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <ol class="steps" aria-label="Adımlar">
-      @for (stepCopy of copy().steps; track stepCopy.title; let i = $index) {
-        <li>
-          <button
-            type="button"
-            class="step"
-            [class.is-current]="step() === i + 1"
-            [class.is-done]="step() > i + 1"
-            (click)="goTo(i + 1)"
-          >
-            <span class="step-index">{{ i + 1 }}</span>
-            <span>
-              <strong>{{ stepCopy.title }}</strong>
-              <small>{{ stepCopy.hint }}</small>
-            </span>
-          </button>
-        </li>
-      }
-    </ol>
+  <form
+    class="wizard"
+    [attr.data-kind]="kind()"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+  >
+    <!-- İlerleme -->
+    <div class="progress-head">
+      <div class="progress-meta">
+        <span class="mono step-count">Adım {{ step() }} / {{ totalSteps }}</span>
+        <span class="progress-pct mono">%{{ progress() }}</span>
+      </div>
+      <div
+        class="progress-bar"
+        role="progressbar"
+        [attr.aria-valuenow]="step()"
+        aria-valuemin="1"
+        [attr.aria-valuemax]="totalSteps"
+        [attr.aria-label]="'İlan formu ilerlemesi'"
+      >
+        <span class="progress-fill" [style.width.%]="progress()"></span>
+      </div>
+      <ol class="steps" aria-label="Adımlar">
+        @for (stepCopy of copy().steps; track stepCopy.title; let i = $index) {
+          <li>
+            <button
+              type="button"
+              class="step"
+              [class.is-current]="step() === i + 1"
+              [class.is-done]="step() > i + 1"
+              [attr.aria-current]="step() === i + 1 ? 'step' : null"
+              (click)="goTo(i + 1)"
+            >
+              <span class="step-index">
+                @if (step() > i + 1) {
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 12.5 4.5 4.5L19 7.5" />
+                  </svg>
+                } @else {
+                  {{ i + 1 }}
+                }
+              </span>
+              <span class="step-label">{{ stepCopy.title }}</span>
+            </button>
+          </li>
+        }
+      </ol>
+    </div>
 
     @if (error()) {
       <div class="banner banner-error" role="alert">{{ error() }}</div>
     }
 
+    <!-- Adım 1: eşya -->
     @if (step() === 1) {
       <fieldset class="panel">
         <legend>{{ copy().steps[0].title }}</legend>
         <p class="hint">{{ copy().steps[0].hint }}</p>
 
-        <label>
-          {{ copy().titleLabel }}
+        <label class="field">
+          <span class="field-label">{{ copy().titleLabel }}</span>
           <input type="text" formControlName="title" [placeholder]="copy().titlePlaceholder" />
           @if (invalid('title')) {
             <span class="hint-error">Başlık en az 2 karakter olmalı.</span>
           }
         </label>
 
-        <label>
-          {{ copy().categoryLabel }}
-          <select formControlName="category">
-            <option value="" disabled>Kategori seçin</option>
+        <div class="field">
+          <span class="field-label">{{ copy().categoryLabel }}</span>
+          <div class="picker">
             @for (name of categories(); track name) {
-              <option [value]="name">{{ name }}</option>
+              <button
+                type="button"
+                class="pill"
+                [attr.aria-pressed]="isPicked('category', name)"
+                (click)="pick('category', name)"
+              >
+                <app-category-icon [category]="name" />
+                {{ name }}
+              </button>
             }
-          </select>
+          </div>
           @if (invalid('category')) {
-            <span class="hint-error">Kategori seçin.</span>
+            <span class="hint-error">Bir kategori seç.</span>
           }
-        </label>
+        </div>
 
-        <label>
-          {{ copy().descriptionLabel }}
-          <textarea rows="4" formControlName="description" [placeholder]="copy().descriptionPlaceholder"></textarea>
+        <label class="field">
+          <span class="field-label">{{ copy().descriptionLabel }}</span>
+          <textarea
+            rows="4"
+            formControlName="description"
+            [placeholder]="copy().descriptionPlaceholder"
+          ></textarea>
           @if (invalid('description')) {
-            <span class="hint-error">Açıklama gerekli.</span>
+            <span class="hint-error">Kısa bir açıklama yaz.</span>
           }
         </label>
 
-        <label>
-          {{ copy().photoLabel }}
-          <input type="text" formControlName="photoUrl" placeholder="https://..." />
+        <label class="field">
+          <span class="field-label">{{ copy().photoLabel }}</span>
+          <input type="url" formControlName="photoUrl" placeholder="https://…" />
           <span class="hint">{{ copy().photoHint }}</span>
         </label>
       </fieldset>
     }
 
+    <!-- Adım 2: konum -->
     @if (step() === 2) {
       <fieldset class="panel">
         <legend>{{ copy().steps[1].title }}</legend>
         <p class="hint">{{ copy().locationHint }}</p>
 
-        <label>
-          {{ copy().locationLabel }}
-          <select formControlName="location">
-            <option value="" disabled>Konum seçin</option>
+        <div class="field">
+          <span class="field-label">{{ copy().locationLabel }}</span>
+          <div class="picker picker-grid">
             @for (name of locations(); track name) {
-              <option [value]="name">{{ name }}</option>
+              <button
+                type="button"
+                class="place"
+                [attr.aria-pressed]="isPicked('location', name)"
+                (click)="pick('location', name)"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+                  <circle cx="12" cy="10" r="2.4" />
+                </svg>
+                {{ name }}
+              </button>
             }
-          </select>
+          </div>
           @if (invalid('location')) {
-            <span class="hint-error">Kampüs konumunu seçin.</span>
+            <span class="hint-error">Kampüs konumunu seç.</span>
           }
-        </label>
+        </div>
 
-        @if (kind() === 'lost') {
-          <aside class="callout">
-            Kayıp ilanı, seçtiğiniz konumdaki açık <strong>bulunan</strong> ilanlarla eşleştirilir.
-          </aside>
-        } @else {
-          <aside class="callout">
-            Eşyayı güvenlik, danışma veya yemekhane kasasına bıraktıysanız açıklamada belirtin.
-            Bu konumdaki açık <strong>kayıp</strong> ilanlar detayda listelenir.
-          </aside>
-        }
+        <aside class="callout">
+          @if (kind() === 'lost') {
+            Kayıp ilanın, seçtiğin konumdaki açık <strong>bulunan</strong> ilanlarla eşleştirilir.
+          } @else {
+            Eşyayı güvenliğe, danışmaya ya da yemekhane kasasına bıraktıysan açıklamada belirt. Bu
+            konumdaki açık <strong>kayıp</strong> ilanlar detay sayfanda listelenir.
+          }
+        </aside>
       </fieldset>
     }
 
+    <!-- Adım 3: iletişim ve önizleme -->
     @if (step() === 3) {
       <fieldset class="panel">
         <legend>{{ copy().steps[2].title }}</legend>
         <p class="hint">{{ copy().contactHint }}</p>
 
-        <label>
-          {{ copy().contactLabel }}
+        <label class="field">
+          <span class="field-label">{{ copy().contactLabel }}</span>
           <input type="text" formControlName="contact" [placeholder]="copy().contactPlaceholder" />
           @if (invalid('contact')) {
             <span class="hint-error">İletişim bilgisi gerekli.</span>
           }
         </label>
 
+        <div class="lock-note">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="4.5" y="10.5" width="15" height="10" rx="2.4" />
+            <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" />
+          </svg>
+          <span>Bu bilgi, ilan sahiplenilene kadar kimseye görünmez.</span>
+        </div>
+
         <div class="review">
-          <h2>Özet</h2>
-          <dl>
-            <div>
-              <dt>Akış</dt>
-              <dd>{{ copy().reviewKind }}</dd>
-            </div>
-            <div>
-              <dt>Başlık</dt>
-              <dd>{{ form.controls.title.value || '—' }}</dd>
-            </div>
-            <div>
-              <dt>Kategori</dt>
-              <dd>{{ form.controls.category.value || '—' }}</dd>
-            </div>
-            <div>
-              <dt>Konum</dt>
-              <dd>{{ form.controls.location.value || '—' }}</dd>
-            </div>
-          </dl>
+          <h2>İlanın böyle görünecek</h2>
+          <!-- Yalnızca önizleme: karta tıklanamaz, odak almaz. -->
+          <div class="review-card" inert>
+            <app-item-card [item]="preview()" />
+          </div>
         </div>
       </fieldset>
     }
 
-    <div class="row-actions">
+    <!-- Eylemler -->
+    <div class="actions">
       @if (step() > 1) {
         <button type="button" class="btn btn-ghost" (click)="back()">Geri</button>
       } @else {
         <a routerLink="/" class="btn btn-ghost">Vazgeç</a>
       }
 
-      @if (step() < 3) {
+      @if (step() < totalSteps) {
         <button type="button" class="btn btn-primary" (click)="next()">Devam</button>
       } @else {
         <button type="submit" class="btn btn-primary" [disabled]="saving()">

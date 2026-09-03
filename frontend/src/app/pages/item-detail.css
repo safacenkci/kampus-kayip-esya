@@ -1,213 +1,460 @@
+/* --- geri bağlantısı --- */
 .back {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: var(--pine);
-  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.1rem;
+  padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: 0.9rem;
   text-decoration: none;
+  transition:
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
+.back:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: translateX(-2px);
+}
+
+/* --- düzen --- */
 .detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 1.35rem;
   align-items: start;
 }
 
-.media,
-.panel,
-.skeleton-detail {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
+.media-col {
+  position: sticky;
+  top: calc(var(--header-h) + 1rem);
 }
 
 .media {
+  background: var(--surface-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   overflow: hidden;
-  min-height: 280px;
+  aspect-ratio: 4 / 3;
 }
 
 .media img {
   width: 100%;
-  display: block;
+  height: 100%;
   object-fit: cover;
-  min-height: 280px;
-  max-height: 520px;
 }
 
 .media-empty {
-  min-height: 280px;
+  height: 100%;
   display: grid;
-  place-items: center;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
   color: var(--muted);
-  font-weight: 650;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.panel {
-  padding: 1.3rem 1.35rem 1.5rem;
+.media-empty app-category-icon {
+  width: 3.6rem;
+  height: 3.6rem;
+  color: var(--ink-2);
+  opacity: 0.5;
 }
 
+.info-col {
+  display: grid;
+  gap: 1.15rem;
+  align-content: start;
+  padding: 1.35rem 1.4rem 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- başlık bölgesi --- */
 .flags {
   display: flex;
+  align-items: center;
   gap: 0.45rem;
-  margin-bottom: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.posted {
+  color: var(--muted);
+  font-size: 0.76rem;
+  margin-left: auto;
 }
 
 h1 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-size: clamp(1.55rem, 4vw, 2.15rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-.when,
-.description {
-  color: var(--muted);
-}
-
+/* --- bilgi kutucukları --- */
 .facts {
   display: grid;
-  gap: 0.7rem;
-  margin: 1.1rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.6rem;
 }
 
-.facts div {
+.fact {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--surface-2);
+  border-radius: var(--r);
+  min-width: 0;
+}
+
+.fact-icon {
   display: grid;
-  gap: 0.15rem;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  flex: none;
 }
 
-dt {
-  font-size: 0.78rem;
+.fact-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fact-icon app-category-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.fact-text {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.fact-text small {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--muted);
 }
 
-dd {
-  margin: 0;
-  font-weight: 650;
+.fact-text strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+/* --- bölümler --- */
+.block {
+  display: grid;
+  gap: 0.55rem;
 }
 
 h2 {
-  margin: 1.1rem 0 0.4rem;
-  font-size: 1rem;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-.status-box {
-  margin-top: 1.2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
+.description {
+  color: var(--ink-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
-.status-actions,
-.row-actions,
-.confirm {
+/* --- iletişim kartı --- */
+.contact-card {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
+  border-radius: var(--r);
+  background: var(--found-tint);
+  border: 1.5px solid var(--found-edge);
 }
 
-.row-actions {
-  margin-top: 1.2rem;
+.contact-card.is-locked {
+  background: var(--surface-2);
+  border: 1.5px dashed var(--line-strong);
 }
 
-.muted,
-.hidden-contact {
+.contact-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  flex: none;
+  background: var(--found-vivid);
+  color: #04231e;
+}
+
+.contact-card.is-locked .contact-icon {
+  background: var(--surface-3);
   color: var(--muted);
-  font-weight: 600;
 }
 
-.hidden-contact {
-  font-style: italic;
+.contact-icon svg {
+  width: 19px;
+  height: 19px;
 }
 
-.status-track {
+.contact-body {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.contact-body small {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.contact-value {
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+a.contact-value {
+  color: var(--found);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.contact-note {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  max-width: 46ch;
+}
+
+/* --- durum izi --- */
+.track {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.4rem;
+  gap: 0.35rem;
   padding: 0;
-  margin: 0 0 0.85rem;
+  margin: 0;
 }
 
-.status-track li {
-  text-align: center;
-  padding: 0.45rem 0.4rem;
-  border-radius: 999px;
-  background: #efe6d8;
+.track li {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.3rem;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
   color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 750;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
 }
 
-.status-track li.is-done {
-  background: color-mix(in srgb, var(--open) 18%, white);
+.track-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+.track li.is-done {
+  background: var(--open-tint);
   color: var(--open);
 }
 
-.status-track li.is-current {
-  background: var(--pine);
-  color: #f7f1e6;
+.track li.is-done .track-dot {
+  opacity: 1;
 }
 
-.history-box {
-  margin-top: 1rem;
+.track li.is-current {
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
+.track li.is-current .track-dot {
+  opacity: 1;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--on-ink) 25%, transparent);
+}
+
+.status-change {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.change-label {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --- geçmiş --- */
 .history {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 1.05rem;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.75rem;
+  border-left: 2px solid var(--line);
 }
 
 .history li {
+  position: relative;
   display: grid;
   gap: 0.1rem;
-  padding: 0.55rem 0.7rem;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--canvas) 70%, white);
+  font-size: 0.88rem;
 }
 
-.history span,
-.history small {
-  color: var(--muted);
-  font-size: 0.82rem;
+.history li::before {
+  content: '';
+  position: absolute;
+  left: -1.42rem;
+  top: 0.45rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
 }
 
+.history li:last-child::before {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.history span {
+  font-size: 0.75rem;
+}
+
+/* --- eylemler --- */
+.row-actions,
+.owner-actions,
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.owner-actions {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.confirm {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* --- eşleşmeler --- */
 .matches {
-  margin-top: 1.4rem;
+  margin-top: 2.2rem;
 }
 
-.matches h2 {
-  margin: 0 0 0.35rem;
+.matches-head {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.9rem;
+}
+
+.matches-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.5rem;
+  border-radius: var(--r-full);
+  background: var(--spot);
+  color: #14171a;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.matches-head p {
+  font-size: 0.92rem;
 }
 
 .match-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 0.85rem;
-  margin-top: 0.8rem;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 0.9rem;
 }
 
-.empty-matches {
-  margin-top: 0.7rem;
-  padding: 1.1rem;
-  border-radius: 16px;
-  border: 1px dashed var(--line);
+.matches-empty {
+  padding: 1.6rem 1.2rem;
+  border-radius: var(--r);
+  border: 1.5px dashed var(--line-strong);
+  background: var(--surface);
   color: var(--muted);
-  background: var(--paper);
+  text-align: center;
+  font-weight: 600;
 }
 
-.skeleton-detail {
-  height: 420px;
+/* --- iskelet --- */
+.skeleton-media {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-lg);
 }
 
-@media (max-width: 840px) {
+.skeleton-panel {
+  min-height: 480px;
+  border-radius: var(--r-lg);
+}
+
+/* --- uyarlama --- */
+@media (max-width: 880px) {
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .media-col {
+    position: static;
+  }
+
+  .info-col {
+    padding: 1.15rem 1.1rem 1.25rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .match-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .track {
     grid-template-columns: 1fr;
   }
 }

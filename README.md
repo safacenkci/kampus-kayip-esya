@@ -28,9 +28,23 @@ MVP'den kusursuz ürüne giden plan `docs/` altında:
 | [`docs/YOL-HARITASI.md`](docs/YOL-HARITASI.md) | 9 faz, 70 görev kartı (~305 adam-saat), mimari, veri modeli, riskler |
 | [`docs/AJAN-PROTOKOLU.md`](docs/AJAN-PROTOKOLU.md) | Paralel çalışan ajanlar için kurallar: dal/commit/PR, dosya sahipliği, migration kilidi |
 | [`docs/gorevler.json`](docs/gorevler.json) | Makine okunur görev listesi (bağımlılık grafiği ile) — görev dağıtımı için |
+| [`docs/TASARIM.md`](docs/TASARIM.md) | Tasarım sistemi: jetonlar, tipografi, tema, bileşen ve metin kuralları |
 
 Sıradaki iş **F0 — Sağlamlaştırma**: CI kurulumu, hata sözleşmesi, sır yönetimi ve
 `F0-SEC-01` (yetkisiz durum değişikliği + iletişim sızıntısı) kapatılması.
+
+## Arayüz
+
+Arayüz üniversite öğrencilerine göre tasarlandı: iki akış (Kaybettim / Buldum) kendi rengini
+taşır, süzgeçler dokunmaya uygun etiketlerdir, sihirbaz ilanın canlı önizlemesini gösterir.
+
+- **Açık ve koyu tema.** Varsayılan işletim sistemi tercihidir; üst çubuktaki düğme
+  açık → koyu → sistem sırasıyla döner ve seçim tarayıcıda saklanır.
+- **Mobil öncelikli.** `≤720px` genişlikte gezinme alt sekme çubuğuna iner.
+- **Erişilebilirlik.** "İçeriğe geç" bağlantısı, görünür odak halkası, `aria-pressed` süzgeçler,
+  `role="progressbar"` sihirbaz, `prefers-reduced-motion` desteği.
+
+Kurallar ve jetonlar: [`docs/TASARIM.md`](docs/TASARIM.md).
 
 ## API (`/api`)
 

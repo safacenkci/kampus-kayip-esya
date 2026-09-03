@@ -7,25 +7,42 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--paper);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-lg);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  box-shadow: var(--shadow);
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
+.card[data-kind='lost']:hover {
+  border-color: var(--lost-edge);
+}
+
+.card[data-kind='found']:hover {
+  border-color: var(--found-edge);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* --- görsel --- */
 .card-media {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: #d7e3db;
+  background: var(--surface-3);
   overflow: hidden;
 }
 
@@ -33,49 +50,88 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
+  transition: transform 320ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.card:hover .card-media img {
+  transform: scale(1.045);
 }
 
 .card-placeholder {
   height: 100%;
   display: grid;
   place-items: center;
-  padding: 1rem;
-  text-align: center;
   color: var(--muted);
-  font-weight: 600;
+  opacity: 0.45;
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+.card-placeholder app-category-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  color: var(--ink-2);
+  opacity: 0.8;
 }
 
 .card-flags {
   position: absolute;
-  inset: 0.7rem 0.7rem auto 0.7rem;
+  inset: 0.65rem 0.65rem auto 0.65rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  justify-content: space-between;
 }
 
+.card-flags .chip {
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- gövde --- */
 .card-body {
-  padding: 1rem 1.05rem 1.15rem;
+  padding: 0.95rem 1rem 1.05rem;
   display: grid;
-  gap: 0.35rem;
+  gap: 0.45rem;
+  align-content: start;
+  flex: 1;
 }
 
-.card-body h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.2rem;
+.card-title {
+  font-size: 1.06rem;
+  font-weight: 700;
   line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.meta,
-.date {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-.meta {
+.card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.3rem 0.8rem;
+  color: var(--ink-2);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  min-width: 0;
+}
+
+.meta-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  color: var(--muted);
+}
+
+.card-time {
+  color: var(--muted);
+  font-size: 0.76rem;
+  margin-top: auto;
+  padding-top: 0.1rem;
 }

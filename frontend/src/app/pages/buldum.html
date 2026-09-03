@@ -1,9 +1,28 @@
-<section class="story story-found">
-  <a routerLink="/" class="back">← İlanlara dön</a>
-  <div class="story-hero">
-    <p class="eyebrow">Aksaray Üniversitesi · Buldum</p>
+<section class="story" data-kind="found">
+  <a routerLink="/" class="back">
+    <span aria-hidden="true">←</span>
+    Panoya dön
+  </a>
+
+  <header class="story-hero">
+    <span class="story-badge">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.9"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+        <path d="m9.4 10.2 1.9 1.9 3.4-3.6" />
+      </svg>
+      Buldum
+    </span>
     <h1>{{ editId() ? copy.editTitle : copy.title }}</h1>
     <p class="lede">{{ editId() ? copy.editLede : copy.lede }}</p>
-  </div>
+  </header>
+
   <app-notice-wizard kind="found" [editId]="editId()" />
 </section>

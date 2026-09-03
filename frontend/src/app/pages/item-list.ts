@@ -1,8 +1,17 @@
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { CategoryIcon } from '../components/category-icon';
 import { ItemCard } from '../components/item-card';
 import { FALLBACK_CATEGORIES, FALLBACK_LOCATIONS } from '../models/catalog';
 import {
@@ -17,7 +26,8 @@ import { ItemService } from '../services/item.service';
 
 @Component({
   selector: 'app-item-list',
-  imports: [ReactiveFormsModule, RouterLink, ItemCard],
+  imports: [ReactiveFormsModule, RouterLink, ItemCard, CategoryIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './item-list.html',
   styleUrl: './item-list.css',
 })
@@ -30,6 +40,7 @@ export class ItemList implements OnInit {
   readonly status = signal('');
   readonly category = signal('');
   readonly location = signal('');
+  readonly searchTerm = signal('');
 
   readonly items = signal<Item[]>([]);
   readonly categories = signal<string[]>([...FALLBACK_CATEGORIES]);
@@ -42,47 +53,59 @@ export class ItemList implements OnInit {
   readonly kindLabels = KIND_LABELS;
   readonly statusLabels = STATUS_LABELS;
 
+  /** Listedeki ilanların tür kırılımı — başlıktaki sayaç şeridi için. */
+  readonly counts = computed(() => {
+    const all = this.items();
+    return {
+      total: all.length,
+      lost: all.filter((item) => item.kind === 'lost').length,
+      found: all.filter((item) => item.kind === 'found').length,
+    };
+  });
+
+  readonly activeFilterCount = computed(() => {
+    return [this.kind(), this.status(), this.category(), this.location(), this.searchTerm()].filter(
+      (value) => value.trim().length > 0,
+    ).length;
+  });
+
+  readonly hasFilters = computed(() => this.activeFilterCount() > 0);
+
   ngOnInit(): void {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadItems());
+      .subscribe((value) => {
+        this.searchTerm.set(value.trim());
+        this.loadItems();
+      });
 
     this.loadCatalog();
     this.loadItems();
   }
 
-  get hasFilters(): boolean {
-    return Boolean(
-      this.searchControl.value.trim() ||
-        this.kind() ||
-        this.status() ||
-        this.category() ||
-        this.location(),
-    );
-  }
-
-  setKind(event: Event): void {
-    this.kind.set((event.target as HTMLSelectElement).value);
+  toggleKind(value: string): void {
+    this.kind.set(this.kind() === value ? '' : value);
     this.loadItems();
   }
 
-  setStatus(event: Event): void {
-    this.status.set((event.target as HTMLSelectElement).value);
+  toggleStatus(value: string): void {
+    this.status.set(this.status() === value ? '' : value);
     this.loadItems();
   }
 
-  setCategory(event: Event): void {
-    this.category.set((event.target as HTMLSelectElement).value);
+  toggleCategory(value: string): void {
+    this.category.set(this.category() === value ? '' : value);
     this.loadItems();
   }
 
-  setLocation(event: Event): void {
-    this.location.set((event.target as HTMLSelectElement).value);
+  toggleLocation(value: string): void {
+    this.location.set(this.location() === value ? '' : value);
     this.loadItems();
   }
 
   clearFilters(): void {
     this.searchControl.setValue('', { emitEvent: false });
+    this.searchTerm.set('');
     this.kind.set('');
     this.status.set('');
     this.category.set('');

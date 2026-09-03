@@ -1,21 +1,24 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Item, KIND_LABELS } from '../models/item';
-import { formatDateTr } from '../utils/format';
+import { formatRelativeTr } from '../utils/format';
 import { KindBadge, StatusBadge } from './badges';
+import { CategoryIcon } from './category-icon';
 
 @Component({
   selector: 'app-item-card',
-  imports: [RouterLink, KindBadge, StatusBadge],
+  imports: [RouterLink, KindBadge, StatusBadge, CategoryIcon],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './item-card.html',
   styleUrl: './item-card.css',
 })
 export class ItemCard {
   readonly item = input.required<Item>();
   readonly kindLabels = KIND_LABELS;
-  readonly formatDate = formatDateTr;
+  readonly relative = formatRelativeTr;
+  readonly photoBroken = signal(false);
 
-  placeholder(kind: Item['kind']): string {
-    return kind === 'lost' ? 'Kayıp eşya görseli yok' : 'Bulunan eşya görseli yok';
+  onPhotoError(): void {
+    this.photoBroken.set(true);
   }
 }
